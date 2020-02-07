@@ -13,11 +13,11 @@
     datacenter: "{{ dc1 }}"
     hardware:
         num_cpus: 1
-        memory_mb: 128
+        memory_mb: 512
     disk:
         - size: 1gb
           type: thin
-          datastore: "{{ rw_datastore }}"
+          autoselect_datastore: True
     networks:
         - name: VM Network
           ip: 192.168.10.12

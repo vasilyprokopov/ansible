@@ -29,10 +29,6 @@ description:
     - Manages core NTP configuration on HUAWEI CloudEngine switches.
 author:
     - Zhijin Zhou (@QijunPan)
-notes:
-    - This module requires the netconf system service be enabled on the remote device being managed.
-    - Recommended connection is C(netconf).
-    - This module also works with C(local) connections for legacy playbooks.
 options:
     server:
         description:
@@ -254,7 +250,7 @@ class Ntp(object):
         self.mutually_exclusive = [('server', 'peer')]
         self.init_module()
 
-        # ntp configuration info
+        # ntp configration info
         self.server = self.module.params['server'] or None
         self.peer = self.module.params['peer'] or None
         self.key_id = self.module.params['key_id']
@@ -366,7 +362,7 @@ class Ntp(object):
         if self.vpn_name:
             if (len(self.vpn_name) < 1) or (len(self.vpn_name) > 31):
                 self.module.fail_json(
-                    msg='Error: VPN name length is between 1 and 31.')
+                    msg='Error: VPN name length is beetween 1 and 31.')
 
         if self.address:
             self.check_ipaddr_validate()
@@ -578,13 +574,12 @@ class Ntp(object):
                         cli_str = "%s %s" % (
                             "undo ntp unicast-peer ipv6", self.address)
                 if (self.vpn_name) and (self.vpn_name != '_public_'):
-                    cli_str = "%s %s %s" % (
-                        cli_str, "vpn-instance", self.vpn_name)
+                    cli_str = "%s %s" % (cli_str, self.vpn_name)
 
         self.updates_cmd.append(cli_str)
 
     def work(self):
-        """Execute task"""
+        """Excute task"""
 
         self.get_existing()
         self.get_proposed()

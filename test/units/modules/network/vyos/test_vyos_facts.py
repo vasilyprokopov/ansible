@@ -94,4 +94,4 @@ class TestVyosFactsModule(TestVyosModule):
 
     def test_vyos_facts_invalid_subset(self):
         set_module_args(dict(gather_subset='cereal'))
-        self.execute_module(failed=True)
+        result = self.execute_module(failed=True)

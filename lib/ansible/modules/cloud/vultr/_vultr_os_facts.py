@@ -73,7 +73,7 @@ ansible_facts:
   description: Response from Vultr API
   returned: success
   type: complex
-  sample:
+  contains:
     "vultr_os_facts": [
       {
         "arch": "x64",

@@ -227,8 +227,8 @@ def filter_user_adgrp_data(json):
 
 def underscore_to_hyphen(data):
     if isinstance(data, list):
-        for i, elem in enumerate(data):
-            data[i] = underscore_to_hyphen(elem)
+        for elem in data:
+            elem = underscore_to_hyphen(elem)
     elif isinstance(data, dict):
         new_data = {}
         for k, v in data.items():

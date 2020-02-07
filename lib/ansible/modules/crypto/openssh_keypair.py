@@ -63,8 +63,6 @@ options:
             - Provides a new comment to the public key. When checking if the key is in the correct state this will be ignored.
         type: str
         version_added: "2.9"
-notes:
-    - In case the ssh key is broken or password protected, the module will fail. Set the I(force) option to C(yes) if you want to regenerate the keypair.
 
 extends_documentation_fragment: files
 '''
@@ -173,7 +171,7 @@ class Keypair(object):
 
     def generate(self, module):
         # generate a keypair
-        if self.force or not self.isPrivateKeyValid(module, perms_required=False):
+        if not self.isPrivateKeyValid(module, perms_required=False) or self.force:
             args = [
                 module.get_bin_path('ssh-keygen', True),
                 '-q',
@@ -242,20 +240,7 @@ class Keypair(object):
         def _check_state():
             return os.path.exists(self.path)
 
-        def _check_pass_protected_or_broken_key():
-            key_state = module.run_command([module.get_bin_path('ssh-keygen', True),
-                                            '-P', '', '-yf', self.path], check_rc=False)
-            if key_state[0] == 255 or 'is not a public key file' in key_state[2]:
-                return True
-            if 'incorrect passphrase' in key_state[2] or 'load failed' in key_state[2]:
-                return True
-            return False
-
         if _check_state():
-            if _check_pass_protected_or_broken_key():
-                module.fail_json(msg='Unable to read the key. The key is protected with a passphrase or broken.'
-                                     ' Will not proceed. To force regeneration, call the module with `force=yes`.')
-
             proc = module.run_command([module.get_bin_path('ssh-keygen', True), '-lf', self.path], check_rc=False)
             if not proc[0] == 0:
                 if os.path.isdir(self.path):
@@ -296,7 +281,8 @@ class Keypair(object):
             else:
                 return False
 
-        def _parse_pubkey(pubkey_content):
+        def _parse_pubkey():
+            pubkey_content = _get_pubkey_content()
             if pubkey_content:
                 parts = pubkey_content.split(' ', 2)
                 return parts[0], parts[1], '' if len(parts) <= 2 else parts[2]
@@ -304,7 +290,8 @@ class Keypair(object):
 
         def _pubkey_valid(pubkey):
             if pubkey_parts:
-                return pubkey_parts[:2] == _parse_pubkey(pubkey)[:2]
+                current_pubkey = ' '.join([pubkey_parts[0], pubkey_parts[1]])
+                return current_pubkey == pubkey
             return False
 
         def _comment_valid():
@@ -319,7 +306,7 @@ class Keypair(object):
 
         pubkey = module.run_command([module.get_bin_path('ssh-keygen', True), '-yf', self.path])
         pubkey = pubkey[1].strip('\n')
-        pubkey_parts = _parse_pubkey(_get_pubkey_content())
+        pubkey_parts = _parse_pubkey()
         if _pubkey_valid(pubkey):
             self.public_key = pubkey
 

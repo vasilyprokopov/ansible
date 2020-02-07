@@ -13,7 +13,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'supported_by': 'community'}
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = '''
 
 module: zabbix_maintenance
 short_description: Create Zabbix maintenance windows
@@ -23,43 +23,42 @@ version_added: "1.8"
 author: "Alexander Bulimov (@abulimov)"
 requirements:
     - "python >= 2.6"
-    - "zabbix-api >= 0.5.4"
+    - "zabbix-api >= 0.5.3"
 options:
     state:
         description:
             - Create or remove a maintenance window. Maintenance window to remove is identified by name.
         default: present
         choices: [ "present", "absent" ]
-        type: str
     host_names:
         description:
             - Hosts to manage maintenance window for.
-            - B(Required) option when I(state=present) and I(host_groups) is not used.
+              Separate multiple hosts with commas.
+              C(host_name) is an alias for C(host_names).
+              B(Required) option when C(state) is I(present)
+              and no C(host_groups) specified.
         aliases: [ "host_name" ]
-        type: list
-        elements: str
     host_groups:
         description:
             - Host groups to manage maintenance window for.
-            - B(Required) option when I(state=present) and I(host_names) is not used.
+              Separate multiple groups with commas.
+              C(host_group) is an alias for C(host_groups).
+              B(Required) option when C(state) is I(present)
+              and no C(host_names) specified.
         aliases: [ "host_group" ]
-        type: list
-        elements: str
     minutes:
         description:
             - Length of maintenance window in minutes.
         default: 10
-        type: int
     name:
         description:
             - Unique name of maintenance window.
         required: true
-        type: str
     desc:
         description:
             - Short description of maintenance window.
+        required: true
         default: Created by Ansible
-        type: str
     collect_data:
         description:
             - Type of maintenance. With data collection, or without.
@@ -78,7 +77,7 @@ notes:
     - Install required module with 'pip install zabbix-api' command.
 '''
 
-EXAMPLES = r'''
+EXAMPLES = '''
 - name: Create a named maintenance window for host www1 for 90 minutes
   zabbix_maintenance:
     name: Update of www1
@@ -274,8 +273,8 @@ def get_host_ids(zbx, host_names):
 def main():
     module = AnsibleModule(
         argument_spec=dict(
-            state=dict(type='str', required=False, default='present', choices=['present', 'absent']),
-            server_url=dict(type='str', required=True, aliases=['url']),
+            state=dict(required=False, default='present', choices=['present', 'absent']),
+            server_url=dict(type='str', required=True, default=None, aliases=['url']),
             host_names=dict(type='list', required=False, default=None, aliases=['host_name']),
             minutes=dict(type='int', required=False, default=10),
             host_groups=dict(type='list', required=False, default=None, aliases=['host_group']),
@@ -363,7 +362,7 @@ def main():
             if module.check_mode:
                 changed = True
             else:
-                (rc, data, error) = update_maintenance(zbx, maintenance["maintenanceid"], group_ids, host_ids, start_time, maintenance_type, period, desc)
+                (rc, _, error) = update_maintenance(zbx, maintenance["maintenanceid"], group_ids, host_ids, start_time, maintenance_type, period, desc)
                 if rc == 0:
                     changed = True
                 else:
@@ -373,7 +372,7 @@ def main():
             if module.check_mode:
                 changed = True
             else:
-                (rc, data, error) = create_maintenance(zbx, group_ids, host_ids, start_time, maintenance_type, period, name, desc)
+                (rc, _, error) = create_maintenance(zbx, group_ids, host_ids, start_time, maintenance_type, period, name, desc)
                 if rc == 0:
                     changed = True
                 else:
@@ -389,7 +388,7 @@ def main():
             if module.check_mode:
                 changed = True
             else:
-                (rc, data, error) = delete_maintenance(zbx, maintenance["maintenanceid"])
+                (rc, _, error) = delete_maintenance(zbx, maintenance["maintenanceid"])
                 if rc == 0:
                     changed = True
                 else:

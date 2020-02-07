@@ -228,7 +228,7 @@ from functools import partial
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.network.common.utils import remove_default_spec
 from ansible.module_utils.network.ios.ios import get_config, load_config
-from ansible.module_utils.network.ios.ios import ios_argument_spec
+from ansible.module_utils.network.ios.ios import ios_argument_spec, check_args
 from ansible.module_utils.six import iteritems
 
 
@@ -505,7 +505,17 @@ def main():
                            supports_check_mode=True)
 
     warnings = list()
-    result = {'changed': False, 'warnings': warnings}
+    if module.params['password'] and not module.params['configured_password']:
+        warnings.append(
+            'The "password" argument is used to authenticate the current connection. ' +
+            'To set a user password use "configured_password" instead.'
+        )
+
+    check_args(module, warnings)
+
+    result = {'changed': False}
+    if warnings:
+        result['warnings'] = warnings
 
     want = map_params_to_obj(module)
     have = map_config_to_obj(module)

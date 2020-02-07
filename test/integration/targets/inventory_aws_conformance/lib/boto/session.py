@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # boto3
 
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
-
 from boto.mocks.instances import Boto3Instance
 
 

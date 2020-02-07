@@ -126,6 +126,12 @@ class LoggedOutMockLPass(MockLPass):
 
 class TestLPass(unittest.TestCase):
 
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
     def test_lastpass_cli_path(self):
         lp = MockLPass(path='/dev/null')
         self.assertEqual('/dev/null', lp.cli_path)

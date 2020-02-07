@@ -45,9 +45,9 @@ EXAMPLES = '''
     voice: Zarvox
   delegate_to: localhost
 '''
-import platform
+import os
 
-from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.basic import AnsibleModule, get_platform
 
 
 def say(module, executable, msg, voice):
@@ -71,7 +71,7 @@ def main():
     voice = module.params['voice']
     possibles = ('say', 'espeak', 'espeak-ng')
 
-    if platform.system() != 'Darwin':
+    if get_platform() != 'Darwin':
         # 'say' binary available, it might be GNUstep tool which doesn't support 'voice' parameter
         voice = None
 

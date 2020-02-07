@@ -1,11 +1,8 @@
 ---
-- name: create test folder(s)
+- name: create test folder
   win_file:
-    path: '{{test_win_pester_path}}\{{item}}'
+    path: '{{test_win_pester_path}}\Modules'
     state: directory
-  with_items:
-  - Modules
-  - Tests
 
 - name: download Pester module from S3 bucket
   win_get_url:
@@ -33,13 +30,11 @@
 - name: copy test files
   win_copy:
     src: files/
-    dest: '{{test_win_pester_path}}\Tests'
+    dest: '{{test_win_pester_path}}\'
 
 - block:
   - name: run Pester tests
     include_tasks: test.yml
-    vars:
-      test_path: '{{ test_win_pester_path }}\Tests'
 
   always:
   - name: remove custom pester location on the PSModulePath
@@ -49,7 +44,7 @@
       state: absent
       elements:
       - '{{test_win_pester_path}}\Modules'
-
+    
   - name: delete test folder
     win_file:
       path: '{{test_win_pester_path}}'

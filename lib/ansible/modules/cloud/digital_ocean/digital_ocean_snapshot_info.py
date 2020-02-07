@@ -27,7 +27,7 @@ version_added: "2.6"
 options:
   snapshot_type:
     description:
-     - Specifies the type of snapshot information to be retrieved.
+     - Specifies the type of snapshot information to be retrived.
      - If set to C(droplet), then information are gathered related to snapshots based on Droplets only.
      - If set to C(volume), then information are gathered related to snapshots based on volumes only.
      - If set to C(by_id), then information are gathered related to snapshots based on snapshot id only.

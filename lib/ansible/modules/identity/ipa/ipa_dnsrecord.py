@@ -14,7 +14,7 @@ ANSIBLE_METADATA = {
 }
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = '''
 ---
 module: ipa_dnsrecord
 author: Abhijeet Kasurde (@Akasurde)
@@ -26,13 +26,11 @@ options:
     description:
     - The DNS zone name to which DNS record needs to be managed.
     required: true
-    type: str
   record_name:
     description:
     - The DNS record name to manage.
     required: true
     aliases: ["name"]
-    type: str
   record_type:
     description:
     - The type of DNS record name.
@@ -41,8 +39,7 @@ options:
     - "'SRV' and 'MX' are added in version 2.8."
     required: false
     default: 'A'
-    choices: ['A', 'AAAA', 'A6', 'CNAME', 'DNAME', 'MX', 'PTR', 'SRV', 'TXT']
-    type: str
+    choices: ['A', 'AAAA', 'A6', 'CNAME', 'DNAME', 'PTR', 'TXT', 'SRV', 'MX']
   record_value:
     description:
     - Manage DNS record name with this value.
@@ -55,27 +52,24 @@ options:
     - In the case of 'SRV' record type, this will be a service record.
     - In the case of 'MX' record type, this will be a mail exchanger record.
     required: true
-    type: str
   record_ttl:
     description:
     - Set the TTL for the record.
     - Applies only when adding a new or changing the value of record_value.
     version_added: "2.7"
     required: false
-    type: int
   state:
     description: State to ensure
     required: false
     default: present
-    choices: ["absent", "present"]
-    type: str
+    choices: ["present", "absent"]
 extends_documentation_fragment: ipa.documentation
 version_added: "2.4"
 '''
 
-EXAMPLES = r'''
-- name: Ensure dns record is present
-  ipa_dnsrecord:
+EXAMPLES = '''
+# Ensure dns record is present
+- ipa_dnsrecord:
     ipa_host: spider.example.com
     ipa_pass: Passw0rd!
     state: present
@@ -84,8 +78,8 @@ EXAMPLES = r'''
     record_type: 'AAAA'
     record_value: '::1'
 
-- name: Ensure that dns record exists with a TTL
-  ipa_dnsrecord:
+# Ensure that dns record exists with a TTL
+- ipa_dnsrecord:
     name: host02
     zone_name: example.com
     record_type: 'AAAA'
@@ -95,8 +89,8 @@ EXAMPLES = r'''
     ipa_pass: topsecret
     state: present
 
-- name: Ensure a PTR record is present
-  ipa_dnsrecord:
+# Ensure a PTR record is present
+- ipa_dnsrecord:
     ipa_host: spider.example.com
     ipa_pass: Passw0rd!
     state: present
@@ -105,8 +99,8 @@ EXAMPLES = r'''
     record_type: 'PTR'
     record_value: 'internal.ipa.example.com'
 
-- name: Ensure a TXT record is present
-  ipa_dnsrecord:
+# Ensure a TXT record is present
+- ipa_dnsrecord:
     ipa_host: spider.example.com
     ipa_pass: Passw0rd!
     state: present
@@ -115,8 +109,8 @@ EXAMPLES = r'''
     record_type: 'TXT'
     record_value: 'EXAMPLE.COM'
 
-- name: Ensure an SRV record is present
-  ipa_dnsrecord:
+# Ensure an SRV record is present
+- ipa_dnsrecord:
     ipa_host: spider.example.com
     ipa_pass: Passw0rd!
     state: present
@@ -125,8 +119,8 @@ EXAMPLES = r'''
     record_type: 'SRV'
     record_value: '10 50 88 ipa.example.com'
 
-- name: Ensure an MX record is present
-  ipa_dnsrecord:
+# Ensure an MX record is present
+- ipa_dnsrecord:
     ipa_host: spider.example.com
     ipa_pass: Passw0rd!
     state: present
@@ -135,8 +129,8 @@ EXAMPLES = r'''
     record_type: 'MX'
     record_value: '1 mailserver.example.com'
 
-- name: Ensure that dns record is removed
-  ipa_dnsrecord:
+# Ensure that dns record is removed
+- ipa_dnsrecord:
     name: host01
     zone_name: example.com
     record_type: 'AAAA'
@@ -147,7 +141,7 @@ EXAMPLES = r'''
     state: absent
 '''
 
-RETURN = r'''
+RETURN = '''
 dnsrecord:
   description: DNS record as returned by IPA API.
   returned: always

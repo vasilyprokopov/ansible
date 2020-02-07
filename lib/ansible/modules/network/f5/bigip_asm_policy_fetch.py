@@ -28,7 +28,7 @@ options:
   dest:
     description:
       - A directory to save the policy file into.
-      - This option is ignored when C(inline) is set to C(yes).
+      - This option is ignored when C(inline) is set to c(yes).
     type: path
   file:
     description:
@@ -57,7 +57,7 @@ options:
     type: bool
   force:
     description:
-      - If C(no), the file will only be transferred if it does not exist in the destination.
+      - If C(no), the file will only be transferred if it does not exist in the the destination.
     default: yes
     type: bool
   partition:

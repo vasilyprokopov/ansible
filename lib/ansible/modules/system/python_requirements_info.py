@@ -81,7 +81,7 @@ mismatched:
 not_found:
   description: A list of packages that could not be imported at all, and are not installed
   returned: always
-  type: list
+  type: dict
   sample:
   - boto4
   - requests

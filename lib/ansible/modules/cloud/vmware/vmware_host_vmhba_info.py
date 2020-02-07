@@ -120,11 +120,6 @@ hosts_vmhbas_info:
         }
 '''
 
-try:
-    from pyVmomi import vim
-except ImportError:
-    pass
-
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.vmware import vmware_argument_spec, PyVmomi
 
@@ -172,17 +167,11 @@ class HostVmhbaMgr(PyVmomi):
                     hba_info['model'] = hba.model
                     hba_info['driver'] = hba.driver
                     try:
-                        if isinstance(hba, (vim.host.FibreChannelHba, vim.host.FibreChannelOverEthernetHba)):
-                            hba_info['node_wwn'] = self.format_number('%X' % hba.nodeWorldWideName)
-                        else:
-                            hba_info['node_wwn'] = self.format_number(hba.nodeWorldWideName)
+                        hba_info['node_wwn'] = self.format_number(hba.nodeWorldWideName)
                     except AttributeError:
                         pass
                     try:
-                        if isinstance(hba, (vim.host.FibreChannelHba, vim.host.FibreChannelOverEthernetHba)):
-                            hba_info['port_wwn'] = self.format_number('%X' % hba.portWorldWideName)
-                        else:
-                            hba_info['port_wwn'] = self.format_number(hba.portWorldWideName)
+                        hba_info['port_wwn'] = self.format_number(hba.portWorldWideName)
                     except AttributeError:
                         pass
                     try:

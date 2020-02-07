@@ -68,12 +68,11 @@
   when: ansible_python_version.split('.')[0] == '2'
   register: backports_lzma_pip
 
-- name: prep our files
+- name: prep our file
   copy: src={{ item }} dest={{output_dir}}/{{ item }}
   with_items:
     - foo.txt
     - bar.txt
-    - empty.txt
 
 - name: archive using gz
   archive:
@@ -87,12 +86,12 @@
 - name: verify that the files archived
   file: path={{output_dir}}/archive_01.gz state=file
 
-- name: check if gz file exists and includes all text files
+- name: check if gz file exists
   assert:
     that:
       - "{{ archive_gz_result_01.changed }}"
       - "{{ 'archived' in archive_gz_result_01 }}"
-      - "{{ archive_gz_result_01['archived'] | length }} == 3"
+      - "{{ archive_gz_result_01['archived'] | length }} == 2"
 
 - name: archive using zip
   archive:
@@ -111,7 +110,7 @@
     that:
       - "{{ archive_zip_result_01.changed }}"
       - "{{ 'archived' in archive_zip_result_01 }}"
-      - "{{ archive_zip_result_01['archived'] | length }} == 3"
+      - "{{ archive_zip_result_01['archived'] | length }} == 2"
 
 - name: archive using bz2
   archive:
@@ -130,7 +129,7 @@
     that:
       - "{{ archive_bz2_result_01.changed }}"
       - "{{ 'archived' in archive_bz2_result_01 }}"
-      - "{{ archive_bz2_result_01['archived'] | length }} == 3"
+      - "{{ archive_bz2_result_01['archived'] | length }} == 2"
 
 - name: archive using xz
   archive:
@@ -149,7 +148,7 @@
     that:
       - "{{ archive_xz_result_01.changed }}"
       - "{{ 'archived' in archive_xz_result_01 }}"
-      - "{{ archive_xz_result_01['archived'] | length }} == 3"
+      - "{{ archive_xz_result_01['archived'] | length }} == 2"
 
 - name: archive and set mode to 0600
   archive:
@@ -172,7 +171,7 @@
       - "archive_02_gz_stat.changed == False "
       - "archive_02_gz_stat.stat.mode == '0600'"
       - "'archived' in archive_bz2_result_02"
-      - "{{ archive_bz2_result_02['archived']| length}} == 3"
+      - "{{ archive_bz2_result_02['archived']| length}} == 2"
 
 - name: remove our gz
   file: path="{{ output_dir }}/archive_02.gz" state=absent
@@ -197,7 +196,7 @@
       - "archive_02_zip_stat.changed == False"
       - "archive_02_zip_stat.stat.mode == '0600'"
       - "'archived' in archive_zip_result_02"
-      - "{{ archive_zip_result_02['archived']| length}} == 3"
+      - "{{ archive_zip_result_02['archived']| length}} == 2"
 
 - name: remove our zip
   file: path="{{ output_dir }}/archive_02.zip" state=absent
@@ -222,7 +221,7 @@
       - "archive_02_bz2_stat.changed == False"
       - "archive_02_bz2_stat.stat.mode == '0600'"
       - "'archived' in archive_bz2_result_02"
-      - "{{ archive_bz2_result_02['archived']| length}} == 3"
+      - "{{ archive_bz2_result_02['archived']| length}} == 2"
 
 - name: remove our bz2
   file: path="{{ output_dir }}/archive_02.bz2" state=absent
@@ -246,7 +245,7 @@
       - "archive_02_xz_stat.changed == False"
       - "archive_02_xz_stat.stat.mode == '0600'"
       - "'archived' in archive_xz_result_02"
-      - "{{ archive_xz_result_02['archived']| length}} == 3"
+      - "{{ archive_xz_result_02['archived']| length}} == 2"
 
 - name: remove our xz
   file: path="{{ output_dir }}/archive_02.xz" state=absent

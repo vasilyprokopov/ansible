@@ -37,7 +37,3 @@ Example Meraki Task
     org_name: YourOrg
     state: present
   delegate_to: localhost
-
-.. seealso::
-
-         :ref:`timeout_options`

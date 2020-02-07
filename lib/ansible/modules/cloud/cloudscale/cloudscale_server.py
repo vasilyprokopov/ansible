@@ -54,7 +54,6 @@ options:
   image:
     description:
       - Image used to create the server.
-    type: str
   volume_size_gb:
     description:
       - Size of the root volume in GB.

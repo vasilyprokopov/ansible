@@ -173,12 +173,6 @@ options:
       type: str
       default: 'medium'
       choices: [ 'disabled', 'high', 'low', 'medium' ]
-    advanced_settings:
-      version_added: "2.10"
-      description:
-      - A dictionary of advanced HA settings.
-      default: {}
-      type: dict
 extends_documentation_fragment: vmware.documentation
 '''
 
@@ -203,6 +197,7 @@ EXAMPLES = r"""
     cluster_name: "{{ cluster_name }}"
     enable_ha: True
     ha_vm_monitoring: vmMonitoringOnly
+    enable_vsan: True
   delegate_to: localhost
 
 - name: Enable HA with admission control reserving 50% of resources for HA
@@ -231,7 +226,7 @@ except ImportError:
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.vmware import (PyVmomi, TaskError, find_datacenter_by_name,
-                                         vmware_argument_spec, wait_for_task, option_diff)
+                                         vmware_argument_spec, wait_for_task)
 from ansible.module_utils._text import to_native
 
 
@@ -260,12 +255,6 @@ class VMwareCluster(PyVmomi):
         self.cluster = self.find_cluster_by_name(cluster_name=self.cluster_name)
         if self.cluster is None:
             self.module.fail_json(msg="Cluster %s does not exist." % self.cluster_name)
-
-        self.advanced_settings = self.params.get('advanced_settings')
-        if self.advanced_settings:
-            self.changed_advanced_settings = option_diff(self.advanced_settings, self.cluster.configurationEx.dasConfig.option)
-        else:
-            self.changed_advanced_settings = None
 
     def get_failover_hosts(self):
         """
@@ -332,9 +321,6 @@ class VMwareCluster(PyVmomi):
                 if das_config.admissionControlPolicy.failoverHosts != self.get_failover_hosts():
                     return True
 
-        if self.changed_advanced_settings:
-            return True
-
         return False
 
     def configure_ha(self):
@@ -391,9 +377,6 @@ class VMwareCluster(PyVmomi):
                 cluster_config_spec.dasConfig.hostMonitoring = self.params.get('ha_host_monitoring')
                 cluster_config_spec.dasConfig.vmMonitoring = self.params.get('ha_vm_monitoring')
 
-                if self.changed_advanced_settings:
-                    cluster_config_spec.dasConfig.option = self.changed_advanced_settings
-
                 try:
                     task = self.cluster.ReconfigureComputeResource_Task(cluster_config_spec, True)
                     changed, result = wait_for_task(task)
@@ -425,7 +408,6 @@ def main():
         host_isolation_response=dict(type='str',
                                      default='none',
                                      choices=['none', 'powerOff', 'shutdown']),
-        advanced_settings=dict(type='dict', default=dict(), required=False),
         # HA VM Monitoring related parameters
         ha_vm_monitoring=dict(type='str',
                               choices=['vmAndAppMonitoring', 'vmMonitoringOnly', 'vmMonitoringDisabled'],

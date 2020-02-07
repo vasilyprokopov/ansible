@@ -139,9 +139,11 @@ EXAMPLES = r'''
 - name: Set authorized key, removing all the authorized keys already set
   authorized_key:
     user: root
-    key: "{{ lookup('file', 'public_keys/doe-jane') }}"
+    key: '{{ item }}'
     state: present
     exclusive: True
+  with_file:
+    - public_keys/doe-jane
 
 - name: Set authorized key for user ubuntu copying it from current user
   authorized_key:

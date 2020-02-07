@@ -68,7 +68,6 @@ options:
                 description:
                 - The physical WAN interface on which the traffic will arrive.
                 choices: [both, internet1, internet2]
-                type: str
             allowed_inbound:
                 description:
                 - The ports this mapping will provide access on, and the remote IPs that will be allowed access to the resource.
@@ -154,15 +153,14 @@ options:
             public_port:
                 description:
                 - A port or port ranges that will be forwarded to the host on the LAN.
-                type: int
+                type: str
             local_port:
                 description:
                 - A port or port ranges that will receive the forwarded traffic from the WAN.
-                type: int
+                type: str
             allowed_ips:
                 description:
                 - List of ranges of WAN IP addresses that are allowed to make inbound connections on the specified ports or port ranges (or any).
-                type: list
             protocol:
                 description:
                 - Protocol to forward traffic for.
@@ -268,22 +266,22 @@ data:
                         name:
                             description: Name of NAT object.
                             returned: success, when 1:1 NAT object is in task
-                            type: str
+                            type: string
                             example: Web server behind NAT
                         lanIp:
                             description: Local IP address to be mapped.
                             returned: success, when 1:1 NAT object is in task
-                            type: str
+                            type: string
                             example: 192.168.128.22
                         publicIp:
                             description: Public IP address to be mapped.
                             returned: success, when 1:1 NAT object is in task
-                            type: str
+                            type: string
                             example: 148.2.5.100
                         uplink:
                             description: Internet port where rule is applied.
                             returned: success, when 1:1 NAT object is in task
-                            type: str
+                            type: string
                             example: internet1
                         allowedInbound:
                             description: List of inbound forwarding rules.
@@ -293,12 +291,12 @@ data:
                                 protocol:
                                     description: Protocol to apply NAT rule to.
                                     returned: success, when 1:1 NAT object is in task
-                                    type: str
+                                    type: string
                                     example: tcp
                                 destinationPorts:
                                     description: Ports to apply NAT rule to.
                                     returned: success, when 1:1 NAT object is in task
-                                    type: str
+                                    type: string
                                     example: 80
                                 allowedIps:
                                     description: List of IP addresses to be forwarded.
@@ -318,12 +316,12 @@ data:
                         publicIp:
                             description: Public IP address to be mapped.
                             returned: success, when 1:many NAT object is in task
-                            type: str
+                            type: string
                             example: 148.2.5.100
                         uplink:
                             description: Internet port where rule is applied.
                             returned: success, when 1:many NAT object is in task
-                            type: str
+                            type: string
                             example: internet1
                         portRules:
                             description: List of NAT port rules.
@@ -333,12 +331,12 @@ data:
                                 name:
                                     description: Name of NAT object.
                                     returned: success, when 1:many NAT object is in task
-                                    type: str
+                                    type: string
                                     example: Web server behind NAT
                                 protocol:
                                     description: Protocol to apply NAT rule to.
                                     returned: success, when 1:1 NAT object is in task
-                                    type: str
+                                    type: string
                                     example: tcp
                                 publicPort:
                                     description: Destination port of the traffic that is arriving on WAN.
@@ -348,7 +346,7 @@ data:
                                 localIp:
                                     description: Local IP address traffic will be forwarded.
                                     returned: success, when 1:1 NAT object is in task
-                                    type: str
+                                    type: string
                                     example: 192.0.2.10
                                 localPort:
                                     description: Destination port to be forwarded to.
@@ -373,7 +371,7 @@ data:
                         lanIp:
                             description: Local IP address to be mapped.
                             returned: success, when port forwarding is in task
-                            type: str
+                            type: string
                             example: 192.168.128.22
                         allowedIps:
                             description: List of IP addresses to be forwarded.
@@ -383,12 +381,12 @@ data:
                         name:
                             description: Name of NAT object.
                             returned: success, when port forwarding is in task
-                            type: str
+                            type: string
                             example: Web server behind NAT
                         protocol:
                             description: Protocol to apply NAT rule to.
                             returned: success, when port forwarding is in task
-                            type: str
+                            type: string
                             example: tcp
                         publicPort:
                             description: Destination port of the traffic that is arriving on WAN.
@@ -403,7 +401,7 @@ data:
                         uplink:
                             description: Internet port where rule is applied.
                             returned: success, when port forwarding is in task
-                            type: str
+                            type: string
                             example: internet1
 '''
 
@@ -493,9 +491,9 @@ def main():
         net_name=dict(type='str', aliases=['name', 'network']),
         state=dict(type='str', choices=['present', 'query'], default='present'),
         subset=dict(type='list', choices=['1:1', '1:many', 'all', 'port_forwarding'], default='all'),
-        one_to_one=dict(type='list', elements='dict', options=one_to_one_spec),
-        one_to_many=dict(type='list', elements='dict', options=one_to_many_spec),
-        port_forwarding=dict(type='list', elements='dict', options=port_forwarding_spec),
+        one_to_one=dict(type='list', element='dict', options=one_to_one_spec),
+        one_to_many=dict(type='list', element='dict', options=one_to_many_spec),
+        port_forwarding=dict(type='list', element='dict', options=port_forwarding_spec),
     )
 
     # the AnsibleModule object will be our abstraction working with Ansible

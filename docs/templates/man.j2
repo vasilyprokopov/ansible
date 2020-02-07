@@ -48,7 +48,7 @@ ACTIONS
 -------
 {% for action in actions %}
 **{{ action }}**
-  {{ (actions[action]['desc']|default(' ')) |replace('\n', ' ')}}
+  {{ (actions[action]['desc']|default(' '))}}
 
 {% if actions[action]['options'] %}
 {% for option in actions[action]['options']|sort(attribute='options') %}

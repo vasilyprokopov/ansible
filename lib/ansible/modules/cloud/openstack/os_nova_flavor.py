@@ -42,8 +42,6 @@ options:
    disk:
      description:
         - Size of local disk, in GB.
-     default: 0
-     type: int
    ephemeral:
      description:
         - Ephemeral space size, in GB.
@@ -183,8 +181,8 @@ def main():
         # required when state is 'present'
         ram=dict(required=False, type='int'),
         vcpus=dict(required=False, type='int'),
+        disk=dict(required=False, type='int'),
 
-        disk=dict(required=False, default=0, type='int'),
         ephemeral=dict(required=False, default=0, type='int'),
         swap=dict(required=False, default=0, type='int'),
         rxtx_factor=dict(required=False, default=1.0, type='float'),

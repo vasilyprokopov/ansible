@@ -205,91 +205,91 @@ result:
     contains:
         _ref:
             description: The reference name of the object
-            type: str
+            type: string
         _locked:
             description: Whether or not the object is currently locked
-            type: bool
+            type: boolean
         _type:
             description: The type of the object
-            type: str
+            type: string
         name:
             description: The name of the object
-            type: str
+            type: string
         aaa:
             description: List of references to utm_aaa objects (allowed users or groups)
             type: list
         basic_prompt:
             description: The message in the basic authentication prompt
-            type: str
+            type: string
         backend_mode:
             description: Specifies if the backend server needs authentication ([Basic|None])
-            type: str
+            type: string
         backend_strip_basic_auth:
             description: Should the login data be stripped when proxying the request to the backend host
-            type: bool
+            type: boolean
         backend_user_prefix:
             description: Prefix string to prepend to the username for backend authentication
-            type: str
+            type: string
         backend_user_suffix:
             description: Suffix string to append to the username for backend authentication
-            type: str
+            type: string
         comment:
             description: Optional comment string
-            type: str
+            type: string
         frontend_cookie:
             description: Frontend cookie name
-            type: str
+            type: string
         frontend_cookie_secret:
             description: Frontend cookie secret
-            type: str
+            type: string
         frontend_form:
             description: Frontend authentication form name
-            type: str
+            type: string
         frontend_form_template:
             description: Frontend authentication form template
-            type: str
+            type: string
         frontend_login:
             description: Frontend login name
-            type: str
+            type: string
         frontend_logout:
             description: Frontend logout name
-            type: str
+            type: string
         frontend_mode:
             description: Frontend authentication mode (Form|Basic)
-            type: str
+            type: string
         frontend_realm:
             description: Frontend authentication realm
-            type: str
+            type: string
         frontend_session_allow_persistency:
             description: Allow session persistency
-            type: bool
+            type: boolean
         frontend_session_lifetime:
             description: session lifetime
-            type: int
+            type: integer
         frontend_session_lifetime_limited:
             description: Specifies if limitation of session lifetime is active
-            type: bool
+            type: boolean
         frontend_session_lifetime_scope:
             description: scope for frontend_session_lifetime (days|hours|minutes)
-            type: str
+            type: string
         frontend_session_timeout:
             description: session timeout
-            type: int
+            type: integer
         frontend_session_timeout_enabled:
             description: Specifies if session timeout is active
-            type: bool
+            type: boolean
         frontend_session_timeout_scope:
             description: scope for frontend_session_timeout (days|hours|minutes)
-            type: str
+            type: string
         logout_delegation_urls:
             description: List of logout URLs that logouts are delegated to
             type: list
         logout_mode:
             description: Mode of logout (None|Delegation)
-            type: str
+            type: string
         redirect_to_requested_url:
             description: Should a redirect to the requested URL be made
-            type: bool
+            type: boolean
 """
 
 from ansible.module_utils.utm_utils import UTM, UTMModule

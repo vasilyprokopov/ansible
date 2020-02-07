@@ -29,10 +29,6 @@ description:
     - Manages MLAG interface attributes on HUAWEI CloudEngine switches.
 author:
     - Li Yanfeng (@QijunPan)
-notes:
-    - This module requires the netconf system service be enabled on the remote device being managed.
-    - Recommended connection is C(netconf).
-    - This module also works with C(local) connections for legacy playbooks.
 options:
     eth_trunk_id:
         description:
@@ -156,7 +152,6 @@ CE_NC_GET_MLAG_INFO = """
 <mlag xmlns="http://www.huawei.com/netconf/vrp" content-version="1.0" format-version="1.0">
   <mlagInstances>
     <mlagInstance>
-    %s
     </mlagInstance>
   </mlagInstances>
 </mlag>
@@ -167,7 +162,7 @@ CE_NC_CREATE_MLAG_INFO = """
 <config>
 <mlag xmlns="http://www.huawei.com/netconf/vrp" content-version="1.0" format-version="1.0">
   <mlagInstances>
-    <mlagInstance operation="merge">
+    <mlagInstance operation="create">
       <dfsgroupId>%s</dfsgroupId>
       <mlagId>%s</mlagId>
       <localMlagPort>%s</localMlagPort>
@@ -183,6 +178,7 @@ CE_NC_DELETE_MLAG_INFO = """
   <mlagInstances>
     <mlagInstance operation="delete">
       <dfsgroupId>%s</dfsgroupId>
+      <mlagId>%s</mlagId>
       <localMlagPort>%s</localMlagPort>
     </mlagInstance>
   </mlagInstances>
@@ -269,7 +265,7 @@ CE_NC_CREATE_MLAG_ERROR_DOWN_INFO = """
 <config>
 <mlag xmlns="http://www.huawei.com/netconf/vrp" content-version="1.0" format-version="1.0">
   <errordowns>
-    <errordown operation="merge">
+    <errordown operation="create">
       <dfsgroupId>1</dfsgroupId>
       <portName>%s</portName>
     </errordown>
@@ -390,7 +386,7 @@ class MlagInterface(object):
         """ get mlag info."""
 
         mlag_info = dict()
-        conf_str = CE_NC_GET_MLAG_INFO % ("<localMlagPort>Eth-Trunk%s</localMlagPort>" % self.eth_trunk_id)
+        conf_str = CE_NC_GET_MLAG_INFO
         xml_str = get_nc_config(self.module, conf_str)
         if "<data/>" in xml_str:
             return mlag_info
@@ -402,7 +398,7 @@ class MlagInterface(object):
             mlag_info["mlagInfos"] = list()
             root = ElementTree.fromstring(xml_str)
             dfs_mlag_infos = root.findall(
-                "./mlag/mlagInstances/mlagInstance")
+                "data/mlag/mlagInstances/mlagInstance")
 
             if dfs_mlag_infos:
                 for dfs_mlag_info in dfs_mlag_infos:
@@ -428,7 +424,7 @@ class MlagInterface(object):
 
             root = ElementTree.fromstring(xml_str)
             global_info = root.findall(
-                "./ifmtrunk/lacpSysInfo/lacpMlagGlobal")
+                "data/ifmtrunk/lacpSysInfo/lacpMlagGlobal")
 
             if global_info:
                 for tmp in global_info:
@@ -454,7 +450,7 @@ class MlagInterface(object):
 
             root = ElementTree.fromstring(xml_str)
             global_info = root.findall(
-                "./ifmtrunk/TrunkIfs/TrunkIf/lacpMlagIf")
+                "data/ifmtrunk/TrunkIfs/TrunkIf/lacpMlagIf")
 
             if global_info:
                 for tmp in global_info:
@@ -479,7 +475,7 @@ class MlagInterface(object):
             mlag_error_down_info["mlagErrorDownInfos"] = list()
             root = ElementTree.fromstring(xml_str)
             mlag_error_infos = root.findall(
-                "./mlag/errordowns/errordown")
+                "data/mlag/errordowns/errordown")
 
             if mlag_error_infos:
                 for mlag_error_info in mlag_error_infos:
@@ -510,12 +506,7 @@ class MlagInterface(object):
         for _, value in enumerate(mac, start=0):
             if value.lower() not in valid_char:
                 return False
-        if all((int(mac_list[0], base=16) == 0, int(mac_list[1], base=16) == 0, int(mac_list[2], base=16) == 0)):
-            return False
-        a = "000" + mac_list[0]
-        b = "000" + mac_list[1]
-        c = "000" + mac_list[2]
-        self.mlag_system_id = "-".join([a[-4:], b[-4:], c[-4:]])
+
         return True
 
     def check_params(self):
@@ -591,7 +582,7 @@ class MlagInterface(object):
         eth_trunk += self.eth_trunk_id
 
         for info in self.mlag_info["mlagInfos"]:
-            if info["localMlagPort"] == eth_trunk:
+            if info["mlagId"] == self.mlag_id and info["localMlagPort"] == eth_trunk:
                 return True
         return False
 
@@ -722,7 +713,7 @@ class MlagInterface(object):
             mlag_port = "Eth-Trunk"
             mlag_port += self.eth_trunk_id
             conf_str = CE_NC_DELETE_MLAG_INFO % (
-                self.dfs_group_id, mlag_port)
+                self.dfs_group_id, self.mlag_id, mlag_port)
             recv_xml = set_nc_config(self.module, conf_str)
             if "<ok/>" not in recv_xml:
                 self.module.fail_json(
@@ -763,7 +754,7 @@ class MlagInterface(object):
             self.changed = True
 
     def set_mlag_interface(self):
-        """set mlag interface attribute info"""
+        """set mlag interface atrribute info"""
 
         if self.is_mlag_interface_info_change():
             mlag_port = "Eth-Trunk"
@@ -777,7 +768,7 @@ class MlagInterface(object):
             recv_xml = set_nc_config(self.module, conf_str)
             if "<ok/>" not in recv_xml:
                 self.module.fail_json(
-                    msg='Error: set mlag interface attribute info failed.')
+                    msg='Error: set mlag interface atrribute info failed.')
 
             self.updates_cmd.append("interface %s" % mlag_port)
             if self.mlag_priority_id:
@@ -795,27 +786,20 @@ class MlagInterface(object):
         if self.is_mlag_interface_info_exist():
             mlag_port = "Eth-Trunk"
             mlag_port += self.eth_trunk_id
-            conf_str = CE_NC_SET_LACP_MLAG_INFO_HEAD % mlag_port
+
             cmd = "interface %s" % mlag_port
             self.cli_add_command(cmd)
 
             if self.mlag_priority_id:
                 cmd = "lacp m-lag priority %s" % self.mlag_priority_id
-                conf_str += "<lacpMlagPriority></lacpMlagPriority>"
                 self.cli_add_command(cmd, True)
 
             if self.mlag_system_id:
                 cmd = "lacp m-lag system-id %s" % self.mlag_system_id
-                conf_str += "<lacpMlagSysId></lacpMlagSysId>"
                 self.cli_add_command(cmd, True)
 
             if self.commands:
-                conf_str += CE_NC_SET_LACP_MLAG_INFO_TAIL
-                recv_xml = set_nc_config(self.module, conf_str)
-                if "<ok/>" not in recv_xml:
-                    self.module.fail_json(
-                        msg='Error: set mlag interface atrribute info failed.')
-
+                self.cli_load_config(self.commands)
                 self.changed = True
 
     def set_mlag_global(self):
@@ -831,7 +815,7 @@ class MlagInterface(object):
             recv_xml = set_nc_config(self.module, conf_str)
             if "<ok/>" not in recv_xml:
                 self.module.fail_json(
-                    msg='Error: set mlag interface attribute info failed.')
+                    msg='Error: set mlag interface atrribute info failed.')
 
             if self.mlag_priority_id:
                 self.updates_cmd.append(
@@ -845,24 +829,17 @@ class MlagInterface(object):
     def delete_mlag_global(self):
         """delete mlag global attribute info"""
 
-        xml_str = ''
         if self.is_mlag_global_info_exist():
             if self.mlag_priority_id:
                 cmd = "lacp m-lag priority %s" % self.mlag_priority_id
-                xml_str += '<lacpMlagPriority></lacpMlagPriority>'
                 self.cli_add_command(cmd, True)
 
             if self.mlag_system_id:
                 cmd = "lacp m-lag system-id %s" % self.mlag_system_id
-                xml_str += '<lacpMlagSysId></lacpMlagSysId>'
                 self.cli_add_command(cmd, True)
 
-            if xml_str != '':
-                conf_str = CE_NC_SET_GLOBAL_LACP_MLAG_INFO_HEAD + xml_str + CE_NC_SET_GLOBAL_LACP_MLAG_INFO_TAIL
-                recv_xml = set_nc_config(self.module, conf_str)
-                if "<ok/>" not in recv_xml:
-                    self.module.fail_json(
-                        msg='Error: set mlag interface atrribute info failed.')
+            if self.commands:
+                self.cli_load_config(self.commands)
                 self.changed = True
 
     def get_proposed(self):
@@ -901,18 +878,18 @@ class MlagInterface(object):
             if self.eth_trunk_id:
                 if self.mlag_trunk_attribute_info:
                     if self.mlag_system_id:
-                        self.existing["lacpMlagSysId"] = self.mlag_trunk_attribute_info[
+                        self.end_state["lacpMlagSysId"] = self.mlag_trunk_attribute_info[
                             "lacpMlagSysId"]
                     if self.mlag_priority_id:
-                        self.existing["lacpMlagPriority"] = self.mlag_trunk_attribute_info[
+                        self.end_state["lacpMlagPriority"] = self.mlag_trunk_attribute_info[
                             "lacpMlagPriority"]
             else:
                 if self.mlag_global_info:
                     if self.mlag_system_id:
-                        self.existing["lacpMlagSysId"] = self.mlag_global_info[
+                        self.end_state["lacpMlagSysId"] = self.mlag_global_info[
                             "lacpMlagSysId"]
                     if self.mlag_priority_id:
-                        self.existing["lacpMlagPriority"] = self.mlag_global_info[
+                        self.end_state["lacpMlagPriority"] = self.mlag_global_info[
                             "lacpMlagPriority"]
 
         if self.interface or self.mlag_error_down:
@@ -1003,8 +980,6 @@ class MlagInterface(object):
                     msg='Error: interface, mlag_error_down must be config at the same time.')
 
         self.get_end_state()
-        if self.existing == self.end_state:
-            self.changed = False
         self.results['changed'] = self.changed
         self.results['proposed'] = self.proposed
         self.results['existing'] = self.existing

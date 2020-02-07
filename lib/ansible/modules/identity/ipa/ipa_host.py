@@ -11,13 +11,13 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'supported_by': 'community'}
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = '''
 ---
 module: ipa_host
 author: Thomas Krahn (@Nosmoht)
 short_description: Manage FreeIPA host
 description:
-- Add, modify and delete an IPA host using IPA API.
+- Add, modify and delete an IPA host using IPA API
 options:
   fqdn:
     description:
@@ -25,11 +25,9 @@ options:
     - Can not be changed as it is the unique identifier.
     required: true
     aliases: ["name"]
-    type: str
   description:
     description:
     - A description of this host.
-    type: str
   force:
     description:
     - Force host name even if not in DNS.
@@ -38,7 +36,6 @@ options:
   ip_address:
     description:
     - Add the host to DNS with this IP address.
-    type: str
   mac_address:
     description:
     - List of Hardware MAC address(es) off this host.
@@ -46,23 +43,18 @@ options:
     - If an empty list is passed all assigned MAC addresses will be removed.
     - MAC addresses that are already assigned but not passed will be removed.
     aliases: ["macaddress"]
-    type: list
-    elements: str
   ns_host_location:
     description:
     - Host location (e.g. "Lab 2")
     aliases: ["nshostlocation"]
-    type: str
   ns_hardware_platform:
     description:
     - Host hardware platform (e.g. "Lenovo T61")
     aliases: ["nshardwareplatform"]
-    type: str
   ns_os_version:
     description:
     - Host operating system and version (e.g. "Fedora 9")
     aliases: ["nsosversion"]
-    type: str
   user_certificate:
     description:
     - List of Base-64 encoded server certificates.
@@ -70,13 +62,10 @@ options:
     - If an empty list is passed all assigned certificates will be removed.
     - Certificates already assigned but not passed will be removed.
     aliases: ["usercertificate"]
-    type: list
-    elements: str
   state:
-    description: State to ensure.
+    description: State to ensure
     default: present
-    choices: ["absent", "disabled", "enabled", "present"]
-    type: str
+    choices: ["present", "absent", "enabled", "disabled"]
   update_dns:
     description:
     - If set C("True") with state as C("absent"), then removes DNS records of the host managed by FreeIPA DNS.
@@ -85,7 +74,7 @@ options:
     type: bool
     version_added: "2.5"
   random_password:
-    description: Generate a random password to be used in bulk enrollment.
+    description: Generate a random password to be used in bulk enrollment
     default: False
     type: bool
     version_added: '2.5'
@@ -93,9 +82,9 @@ extends_documentation_fragment: ipa.documentation
 version_added: "2.3"
 '''
 
-EXAMPLES = r'''
-- name: Ensure host is present
-  ipa_host:
+EXAMPLES = '''
+# Ensure host is present
+- ipa_host:
     name: host01.example.com
     description: Example host
     ip_address: 192.168.0.123
@@ -110,8 +99,8 @@ EXAMPLES = r'''
     ipa_user: admin
     ipa_pass: topsecret
 
-- name: Generate a random password for bulk enrolment
-  ipa_host:
+# Generate a random password for bulk enrolment
+- ipa_host:
     name: host01.example.com
     description: Example host
     ip_address: 192.168.0.123
@@ -122,32 +111,32 @@ EXAMPLES = r'''
     validate_certs: False
     random_password: True
 
-- name: Ensure host is disabled
-  ipa_host:
+# Ensure host is disabled
+- ipa_host:
     name: host01.example.com
     state: disabled
     ipa_host: ipa.example.com
     ipa_user: admin
     ipa_pass: topsecret
 
-- name: Ensure that all user certificates are removed
-  ipa_host:
+# Ensure that all user certificates are removed
+- ipa_host:
     name: host01.example.com
     user_certificate: []
     ipa_host: ipa.example.com
     ipa_user: admin
     ipa_pass: topsecret
 
-- name: Ensure host is absent
-  ipa_host:
+# Ensure host is absent
+- ipa_host:
     name: host01.example.com
     state: absent
     ipa_host: ipa.example.com
     ipa_user: admin
     ipa_pass: topsecret
 
-- name: Ensure host and its DNS record is absent
-  ipa_host:
+# Ensure host and its DNS record is absent
+- ipa_host:
     name: host01.example.com
     state: absent
     ipa_host: ipa.example.com
@@ -156,7 +145,7 @@ EXAMPLES = r'''
     update_dns: True
 '''
 
-RETURN = r'''
+RETURN = '''
 host:
   description: Host as returned by IPA API.
   returned: always
@@ -286,8 +275,8 @@ def main():
                          ns_host_location=dict(type='str', aliases=['nshostlocation']),
                          ns_hardware_platform=dict(type='str', aliases=['nshardwareplatform']),
                          ns_os_version=dict(type='str', aliases=['nsosversion']),
-                         user_certificate=dict(type='list', aliases=['usercertificate'], elements='str'),
-                         mac_address=dict(type='list', aliases=['macaddress'], elements='str'),
+                         user_certificate=dict(type='list', aliases=['usercertificate']),
+                         mac_address=dict(type='list', aliases=['macaddress']),
                          update_dns=dict(type='bool'),
                          state=dict(type='str', default='present', choices=['present', 'absent', 'enabled', 'disabled']),
                          random_password=dict(type='bool'),)

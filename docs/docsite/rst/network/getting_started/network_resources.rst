@@ -44,4 +44,4 @@ Join us on:
 
 * Freenode IRC - ``#ansible-network`` Freenode channel
 
-* Slack - `<https://ansiblenetwork.slack.com>`_
+* Slack - `<http://ansiblenetwork.slack.com>`_

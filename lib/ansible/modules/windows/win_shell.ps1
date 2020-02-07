@@ -48,7 +48,6 @@ $creates = Get-AnsibleParam -obj $params -name "creates" -type "path"
 $removes = Get-AnsibleParam -obj $params -name "removes" -type "path"
 $stdin = Get-AnsibleParam -obj $params -name "stdin" -type "str"
 $no_profile = Get-AnsibleParam -obj $params -name "no_profile" -type "bool" -default $false
-$output_encoding_override = Get-AnsibleParam -obj $params -name "output_encoding_override" -type "str"
 
 $raw_command_line = $raw_command_line.Trim()
 
@@ -103,9 +102,6 @@ if ($chdir) {
 }
 if ($stdin) {
     $run_command_arg['stdin'] = $stdin
-}
-if ($output_encoding_override) {
-    $run_command_arg['output_encoding_override'] = $output_encoding_override
 }
 
 $start_datetime = [DateTime]::UtcNow

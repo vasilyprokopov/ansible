@@ -2,31 +2,24 @@
 - debug:
     msg: "Start nxos_l3_interfaces merged integration tests connection={{ ansible_connection }}"
 
-- set_fact:
-    test_int3: "{{ nxos_int3 }}"
-    subint3: "{{ nxos_int3 }}.42"
+- set_fact: test_int1="{{ nxos_int1 }}"
 
 - name: setup1
   cli_config: &cleanup
     config: |
-      no system default switchport
-      default interface {{ test_int3 }}
-      interface {{ test_int3 }}
-        no switchport
-  ignore_errors: yes
-
-- name: setup2 cleanup all L3 states on all interfaces
-  nxos_l3_interfaces:
-    state: deleted
+      default interface {{ test_int1 }}
 
 - block:
+  - name: setup2
+    cli_config:
+      config: |
+        interface {{ test_int1 }}
+          no switchport
+
   - name: Merged
     nxos_l3_interfaces: &merged
       config:
-        - name: "{{ subint3 }}"
-          dot1q: 42
-          redirects: false
-          unreachables: true
+        - name: "{{ test_int1 }}"
           ipv4:
             - address: 192.168.10.2/24
       state:  merged
@@ -36,12 +29,9 @@
       that:
         - "result.changed == true"
         - "result.before|length == 0"
-        - "'interface {{ subint3 }}' in result.commands"
-        - "'encapsulation dot1q 42' in result.commands"
-        - "'no ip redirects' in result.commands"
-        - "'ip unreachables' in result.commands"
+        - "'interface {{ test_int1 }}' in result.commands"
         - "'ip address 192.168.10.2/24' in result.commands"
-        - "result.commands|length == 5"
+        - "result.commands|length == 2"
 
   - name: Gather l3_interfaces facts
     nxos_facts:
@@ -52,7 +42,7 @@
 
   - assert:
       that:
-        - "result.after|length == (ansible_facts.network_resources.l3_interfaces|length|int - rsvd_intf_len|int)"
+        - "ansible_facts.network_resources.l3_interfaces|symmetric_difference(result.after)|length == 0"
 
   - name: Idempotence - Merged
     nxos_l3_interfaces: *merged
@@ -65,7 +55,4 @@
 
   always:
   - name: teardown
-    cli_config:
-      config: |
-        no interface {{ subint3 }}
-    ignore_errors: yes
+    cli_config: *cleanup

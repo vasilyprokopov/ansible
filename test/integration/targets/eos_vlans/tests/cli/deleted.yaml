@@ -32,6 +32,7 @@
     expected_config:
       - vlan_id: 10
         name: ten
+      - vlan_id: 20
 
 - assert:
     that:

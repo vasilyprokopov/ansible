@@ -160,7 +160,7 @@ state:
             type: dict
             sample: { 'key1':'value1' }
         type:
-            description:
+            descriptioin:
                 - Resource type.
             returned: always
             type: str

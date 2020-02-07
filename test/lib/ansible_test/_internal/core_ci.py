@@ -4,7 +4,6 @@ __metaclass__ = type
 
 import json
 import os
-import re
 import traceback
 import uuid
 import errno
@@ -18,22 +17,18 @@ from .http import (
     HttpError,
 )
 
-from .io import (
-    make_dirs,
-    read_text_file,
-    write_json_file,
-    write_text_file,
-)
-
 from .util import (
     ApplicationError,
+    make_dirs,
     display,
     is_shippable,
+    to_text,
     ANSIBLE_TEST_DATA_ROOT,
 )
 
 from .util_common import (
     run_command,
+    write_json_file,
     ResultType,
 )
 
@@ -72,7 +67,6 @@ class AnsibleCoreCI:
         self.instance_id = None
         self.endpoint = None
         self.max_threshold = 1
-        self.retries = 3
         self.name = name if name else '%s-%s' % (self.platform, self.version)
         self.ci_key = os.path.expanduser('~/.ansible-core-ci.key')
         self.resource = 'jobs'
@@ -93,10 +87,6 @@ class AnsibleCoreCI:
             ),
             azure=(
                 'azure',
-            ),
-            ibmcloud=(
-                'aix',
-                'ibmi',
             ),
             parallels=(
                 'osx',
@@ -123,7 +113,7 @@ class AnsibleCoreCI:
 
         self.path = os.path.expanduser('~/.ansible/test/instances/%s-%s-%s' % (self.name, self.provider, self.stage))
 
-        if self.provider in ('aws', 'azure', 'ibmcloud'):
+        if self.provider in ('aws', 'azure'):
             if self.provider != 'aws':
                 self.resource = self.provider
 
@@ -150,12 +140,6 @@ class AnsibleCoreCI:
                 self.port = 5986
             else:
                 self.port = 22
-
-            if self.provider == 'ibmcloud':
-                # Additional retries are neededed to accommodate images transitioning
-                # to the active state in the IBM cloud. This operation can take up to
-                # 90 seconds
-                self.retries = 7
         elif self.provider == 'parallels':
             self.endpoints = self._get_parallels_endpoints()
             self.max_threshold = 6
@@ -166,6 +150,7 @@ class AnsibleCoreCI:
             self.ssh_key = SshKey(args)
             self.endpoints = ['https://access.ws.testing.ansible.com']
             self.max_threshold = 1
+
         else:
             raise ApplicationError('Unsupported platform: %s' % platform)
 
@@ -237,7 +222,8 @@ class AnsibleCoreCI:
 
     def start_remote(self):
         """Start instance for remote development/testing."""
-        auth_key = read_text_file(self.ci_key).strip()
+        with open(self.ci_key, 'r') as key_fd:
+            auth_key = key_fd.read().strip()
 
         return self._start(dict(
             remote=dict(
@@ -370,7 +356,8 @@ class AnsibleCoreCI:
         display.info('Initializing new %s/%s instance %s.' % (self.platform, self.version, self.instance_id), verbosity=1)
 
         if self.platform == 'windows':
-            winrm_config = read_text_file(os.path.join(ANSIBLE_TEST_DATA_ROOT, 'setup', 'ConfigureRemotingForAnsible.ps1'))
+            with open(os.path.join(ANSIBLE_TEST_DATA_ROOT, 'setup', 'ConfigureRemotingForAnsible.ps1'), 'rb') as winrm_config_fd:
+                winrm_config = to_text(winrm_config_fd.read())
         else:
             winrm_config = None
 
@@ -435,7 +422,7 @@ class AnsibleCoreCI:
         :type threshold: int
         :rtype: HttpResponse | None
         """
-        tries = self.retries
+        tries = 3
         sleep = 15
 
         data['threshold'] = threshold
@@ -472,7 +459,8 @@ class AnsibleCoreCI:
     def _load(self):
         """Load instance information."""
         try:
-            data = read_text_file(self.path)
+            with open(self.path, 'r') as instance_fd:
+                data = instance_fd.read()
         except IOError as ex:
             if ex.errno != errno.ENOENT:
                 raise
@@ -598,7 +586,8 @@ class SshKey:
         if args.explain:
             self.pub_contents = None
         else:
-            self.pub_contents = read_text_file(self.pub).strip()
+            with open(self.pub, 'r') as pub_fd:
+                self.pub_contents = pub_fd.read().strip()
 
     def get_in_tree_key_pair_paths(self):  # type: () -> t.Optional[t.Tuple[str, str]]
         """Return the ansible-test SSH key pair paths from the content tree."""
@@ -641,12 +630,6 @@ class SshKey:
 
         if not os.path.isfile(key) or not os.path.isfile(pub):
             run_command(args, ['ssh-keygen', '-m', 'PEM', '-q', '-t', 'rsa', '-N', '', '-f', key])
-
-            # newer ssh-keygen PEM output (such as on RHEL 8.1) is not recognized by paramiko
-            key_contents = read_text_file(key)
-            key_contents = re.sub(r'(BEGIN|END) PRIVATE KEY', r'\1 RSA PRIVATE KEY', key_contents)
-
-            write_text_file(key, key_contents)
 
         return key, pub
 

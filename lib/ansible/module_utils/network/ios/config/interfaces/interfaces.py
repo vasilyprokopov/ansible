@@ -105,10 +105,7 @@ class Interfaces(ConfigBase):
                   to the deisred configuration
         """
         commands = []
-
         state = self._module.params['state']
-        if state in ('overridden', 'merged', 'replaced') and not want:
-            self._module.fail_json(msg='value of config parameter must not be empty for state {0}'.format(state))
 
         if state == 'overridden':
             commands = self._state_overridden(want, have)
@@ -140,11 +137,10 @@ class Interfaces(ConfigBase):
                 elif interface['name'] in each['name']:
                     break
             else:
-                # configuring non-existing interface
-                commands.extend(self._set_config(interface, dict()))
                 continue
             have_dict = filter_dict_having_none_value(interface, each)
-            commands.extend(self._clear_config(dict(), have_dict))
+            want = dict()
+            commands.extend(self._clear_config(want, have_dict))
             commands.extend(self._set_config(interface, each))
         # Remove the duplicate interface call
         commands = remove_duplicate_interface(commands)
@@ -164,12 +160,10 @@ class Interfaces(ConfigBase):
 
         for each in have:
             for interface in want:
-                count = 0
                 if each['name'] == interface['name']:
                     break
                 elif interface['name'] in each['name']:
                     break
-                count += 1
             else:
                 # We didn't find a matching desired state, which means we can
                 # pretend we recieved an empty desired state.
@@ -177,17 +171,9 @@ class Interfaces(ConfigBase):
                 commands.extend(self._clear_config(interface, each))
                 continue
             have_dict = filter_dict_having_none_value(interface, each)
-            commands.extend(self._clear_config(dict(), have_dict))
+            want = dict()
+            commands.extend(self._clear_config(want, have_dict))
             commands.extend(self._set_config(interface, each))
-            # as the pre-existing interface are now configured by
-            # above set_config call, deleting the respective
-            # interface entry from the want list
-            del want[count]
-
-        # Iterating through want list which now only have new interfaces to be
-        # configured
-        for each in want:
-            commands.extend(self._set_config(each, dict()))
         # Remove the duplicate interface call
         commands = remove_duplicate_interface(commands)
 
@@ -209,8 +195,6 @@ class Interfaces(ConfigBase):
                 if each['name'] == interface['name']:
                     break
             else:
-                # configuring non-existing interface
-                commands.extend(self._set_config(interface, dict()))
                 continue
             commands.extend(self._set_config(interface, each))
 

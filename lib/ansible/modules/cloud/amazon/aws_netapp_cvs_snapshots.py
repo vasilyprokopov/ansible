@@ -126,7 +126,7 @@ class AwsCvsNetappSnapshot(object):
         self.module = AnsibleModule(
             argument_spec=self.argument_spec,
             required_if=[
-                ('state', 'present', ['name', 'fileSystemId']),
+                ('state', 'present', ['state', 'name', 'fileSystemId']),
             ],
             supports_check_mode=True
         )

@@ -56,6 +56,7 @@ class TestIosFactsModule(TestIosModule):
 
     def load_fixtures(self, commands=None):
         def load_from_file(*args, **kwargs):
+            module = args
             commands = kwargs['commands']
             output = list()
 

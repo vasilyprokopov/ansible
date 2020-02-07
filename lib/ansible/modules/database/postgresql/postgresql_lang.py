@@ -50,7 +50,6 @@ options:
     type: str
     aliases:
     - login_db
-    required: true
   force_trust:
     description:
     - Marks the language as trusted, even if it's marked as untrusted in pg_pltemplate.
@@ -104,12 +103,6 @@ options:
     type: str
     aliases: [ ssl_rootcert ]
     version_added: '2.8'
-  owner:
-    description:
-      - Set an owner for the language.
-      - Ignored when I(state=absent).
-    type: str
-    version_added: '2.10'
 seealso:
 - name: PostgreSQL languages
   description: General information about PostgreSQL languages.
@@ -163,12 +156,6 @@ EXAMPLES = r'''
     lang: pltclu
     state: absent
     fail_on_drop: no
-
-- name: In testdb change owner of mylang to alice
-  postgresql_lang:
-    db: testdb
-    lang: mylang
-    owner: alice
 '''
 
 RETURN = r'''
@@ -192,23 +179,23 @@ executed_queries = []
 
 def lang_exists(cursor, lang):
     """Checks if language exists for db"""
-    query = "SELECT lanname FROM pg_language WHERE lanname = %(lang)s"
-    cursor.execute(query, {'lang': lang})
+    query = "SELECT lanname FROM pg_language WHERE lanname = '%s'" % lang
+    cursor.execute(query)
     return cursor.rowcount > 0
 
 
 def lang_istrusted(cursor, lang):
     """Checks if language is trusted for db"""
-    query = "SELECT lanpltrusted FROM pg_language WHERE lanname = %(lang)s"
-    cursor.execute(query, {'lang': lang})
+    query = "SELECT lanpltrusted FROM pg_language WHERE lanname = '%s'" % lang
+    cursor.execute(query)
     return cursor.fetchone()[0]
 
 
 def lang_altertrust(cursor, lang, trust):
     """Changes if language is trusted for db"""
-    query = "UPDATE pg_language SET lanpltrusted = %(trust)s WHERE lanname = %(lang)s"
-    cursor.execute(query, {'trust': trust, 'lang': lang})
-    executed_queries.append(cursor.mogrify(query, {'trust': trust, 'lang': lang}))
+    query = "UPDATE pg_language SET lanpltrusted = '%s' WHERE lanname = '%s'" % (trust, lang)
+    executed_queries.append(query)
+    cursor.execute(query)
     return True
 
 
@@ -241,34 +228,6 @@ def lang_drop(cursor, lang, cascade):
     return True
 
 
-def get_lang_owner(cursor, lang):
-    """Get language owner.
-
-    Args:
-        cursor (cursor): psycopg2 cursor object.
-        lang (str): language name.
-    """
-    query = ("SELECT r.rolname FROM pg_language l "
-             "JOIN pg_roles r ON l.lanowner = r.oid "
-             "WHERE l.lanname = %(lang)s")
-    cursor.execute(query, {'lang': lang})
-    return cursor.fetchone()[0]
-
-
-def set_lang_owner(cursor, lang, owner):
-    """Set language owner.
-
-    Args:
-        cursor (cursor): psycopg2 cursor object.
-        lang (str): language name.
-        owner (str): name of new owner.
-    """
-    query = "ALTER LANGUAGE \"%s\" OWNER TO %s" % (lang, owner)
-    executed_queries.append(query)
-    cursor.execute(query)
-    return True
-
-
 def main():
     argument_spec = postgres_common_argument_spec()
     argument_spec.update(
@@ -280,7 +239,6 @@ def main():
         cascade=dict(type="bool", default="no"),
         fail_on_drop=dict(type="bool", default="yes"),
         session_role=dict(type="str"),
-        owner=dict(type="str"),
     )
 
     module = AnsibleModule(
@@ -295,7 +253,6 @@ def main():
     force_trust = module.params["force_trust"]
     cascade = module.params["cascade"]
     fail_on_drop = module.params["fail_on_drop"]
-    owner = module.params["owner"]
 
     conn_params = get_conn_params(module, module.params)
     db_connection = connect_to_db(module, conn_params, autocommit=False)
@@ -328,15 +285,9 @@ def main():
             else:
                 changed = lang_drop(cursor, lang, cascade)
                 if fail_on_drop and not changed:
-                    msg = ("unable to drop language, use cascade "
-                           "to delete dependencies or fail_on_drop=no to ignore")
+                    msg = "unable to drop language, use cascade to delete dependencies or fail_on_drop=no to ignore"
                     module.fail_json(msg=msg)
                 kw['lang_dropped'] = changed
-
-    if owner and state == 'present':
-        if lang_exists(cursor, lang):
-            if owner != get_lang_owner(cursor, lang):
-                changed = set_lang_owner(cursor, lang, owner)
 
     if changed:
         if module.check_mode:

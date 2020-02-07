@@ -36,8 +36,7 @@ class TerminalModule(TerminalBase):
 
     terminal_stderr_re = [
         re.compile(br"error:", re.I),
-        re.compile(br"Removing.* not allowed, it is being used"),
-        re.compile(br"^Command authorization failed\r?$", re.MULTILINE)
+        re.compile(br"Removing.* not allowed, it is being used")
     ]
 
     def on_open_shell(self):

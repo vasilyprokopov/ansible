@@ -42,7 +42,7 @@ class InterfacesArgs(object):
                                                                    'full-duplex',
                                                                    'half-duplex'],
                                                        'type': 'str'},
-                                            'enabled': {'default': True, 'type': 'bool'},
+                                            'enable': {'default': True, 'type': 'bool'},
                                             'hold_time': {'options': {'down': {'type': 'int'},
                                                                       'up': {'type': 'int'}},
                                                           'required_together': [['down', 'up']],

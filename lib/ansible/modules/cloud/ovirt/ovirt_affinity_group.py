@@ -43,9 +43,8 @@ options:
         description:
             - If I(positive) I(all) VMs in this group should run on the this host.
             - If I(negative) I(no) VMs in this group should run on the this host.
-            - If I(disabled) this affinity group doesn't take effect.
             - This parameter is support since oVirt/RHV 4.1 version.
-        choices: [ disabled, negative, positive ]
+        choices: [ negative, positive ]
     vm_enforcing:
         description:
             - If I(yes) VM cannot start if it does not satisfy the C(vm_rule).
@@ -257,7 +256,7 @@ def main():
         vm_enforcing=dict(type='bool'),
         vm_rule=dict(type='str', choices=['disabled', 'negative', 'positive']),
         host_enforcing=dict(type='bool'),
-        host_rule=dict(type='str', choices=['disabled', 'negative', 'positive']),
+        host_rule=dict(type='str', choices=['negative', 'positive']),
         vms=dict(type='list'),
         hosts=dict(type='list'),
     )

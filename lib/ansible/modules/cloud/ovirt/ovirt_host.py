@@ -75,7 +75,6 @@ options:
         description:
             - "Indicates that the host should be removed even if it is non-responsive,
                or if it is part of a Gluster Storage cluster and has volume bricks on it."
-            - "WARNING: It doesn't forcibly remove the host if another host related operation is being executed on the host at the same time."
         default: False
         type: bool
     override_display:
@@ -126,27 +125,7 @@ options:
              used to discover targets"
           - "If C(state) is I(iscsilogin) it means that the iscsi attribute is being
              used to login to the specified targets passed as part of the iscsi attribute"
-        suboptions:
-            username:
-                description:
-                    - "A CHAP user name for logging into a target."
-            password:
-                description:
-                    - "A CHAP password for logging into a target."
-            address:
-                description:
-                    - "Address of the iSCSI storage server."
-            target:
-                description:
-                    - "The target IQN for the storage device."
-            port:
-                description:
-                    - "The port being used to connect with iscsi."
-            portal:
-                description:
-                    - "The portal being used to connect with iscsi."
-                version_added: 2.10
-        version_added: 2.4
+        version_added: "2.4"
     check_upgrade:
         description:
             - "If I(true) and C(state) is I(upgraded) run check for upgrade
@@ -601,7 +580,6 @@ def main():
                     username=iscsi_param.get('username'),
                     password=iscsi_param.get('password'),
                     address=iscsi_param.get('address'),
-                    portal=iscsi_param.get('portal'),
                 ),
             )
             ret = {
@@ -620,7 +598,6 @@ def main():
                     password=iscsi_param.get('password'),
                     address=iscsi_param.get('address'),
                     target=iscsi_param.get('target'),
-                    portal=iscsi_param.get('portal'),
                 ),
             )
         elif state == 'started':

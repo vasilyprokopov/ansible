@@ -69,7 +69,7 @@ RETURN = """
         returned: always
         sample: "Created snapshot image"
     image_id:
-        description: ID of snapshot image
+        description: ID of snaphot image
         type: str
         returned: state == created
         sample: "3400000060080E5000299B640063074057BC5C5E "

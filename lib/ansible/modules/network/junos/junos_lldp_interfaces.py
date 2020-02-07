@@ -54,7 +54,7 @@ options:
           - Name of the interface LLDP needs to be configured on.
         type: str
         required: True
-      enabled:
+      enable:
         description:
           - This is a boolean value to control disabling of LLDP on the interface C(name)
         type: bool
@@ -82,7 +82,7 @@ EXAMPLES = """
     config:
       - name: ge-0/0/1
       - name: ge-0/0/2
-        enabled: False
+        enable: False
     state: merged
 
 # After state:
@@ -112,7 +112,7 @@ EXAMPLES = """
       - name: ge-0/0/2
         disable: False
       - name: ge-0/0/3
-        enabled: False
+        enable: False
     state: replaced
 
 # After state:
@@ -141,7 +141,7 @@ EXAMPLES = """
   junos_lldp_interfaces:
     config:
       - name: ge-0/0/2
-        enabled: False
+        enable: False
     state: overridden
 
 # After state:

@@ -1,8 +1,8 @@
 .. _network_getting_started:
 
-**********************************
-Network Automation Getting Started
-**********************************
+***************************************************
+Getting Started with Ansible for Network Automation
+***************************************************
 
 Ansible modules support a wide range of vendors, device types, and actions, so you can manage your entire network with a single automation tool. With Ansible, you can:
 
@@ -30,5 +30,4 @@ This guide introduces basic Ansible concepts and guides you through your first A
    first_inventory
    network_roles
    intermediate_concepts
-   network_connection_options
    network_resources

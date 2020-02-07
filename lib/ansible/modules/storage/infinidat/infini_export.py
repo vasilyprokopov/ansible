@@ -112,7 +112,7 @@ def get_filesystem(module, system):
 
 @api_wrapper
 def get_export(module, filesystem, system):
-    """Return export if found. When not found return None"""
+    """Retrun export if found. When not found return None"""
 
     export = None
     exports_to_list = system.exports.to_list()

@@ -23,7 +23,6 @@
   luks_device:
     device: "{{ cryptfile_device }}"
     state: closed
-  become: yes
 
 - name: Try to open with keyfile2
   luks_device:
@@ -62,11 +61,9 @@
   luks_device:
     device: "{{ cryptfile_device }}"
     state: closed
-  become: yes
 
 - name: Dump LUKS header
   command: "cryptsetup luksDump {{ cryptfile_device }}"
-  become: yes
 
 - name: Remove access from keyfile1
   luks_device:
@@ -105,11 +102,9 @@
   luks_device:
     device: "{{ cryptfile_device }}"
     state: closed
-  become: yes
 
 - name: Dump LUKS header
   command: "cryptsetup luksDump {{ cryptfile_device }}"
-  become: yes
 
 - name: Remove access from keyfile2
   luks_device:
@@ -142,7 +137,6 @@
   luks_device:
     device: "{{ cryptfile_device }}"
     state: closed
-  become: yes
 
 - name: Remove access from keyfile2
   luks_device:

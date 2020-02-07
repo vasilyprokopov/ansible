@@ -251,10 +251,7 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
                     self.fail("Cannot update remote_virtual_network of Virtual Network Peering!")
 
                 # check if update
-                if response['peering_state'] == 'Disconnected':
-                    to_be_updated = True
-                else:
-                    to_be_updated = self.check_update(response)
+                to_be_updated = self.check_update(response)
 
             else:
                 # not exists, create new vnet peering

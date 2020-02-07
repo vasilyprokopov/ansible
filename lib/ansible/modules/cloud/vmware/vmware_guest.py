@@ -29,7 +29,7 @@ requirements:
 - python >= 2.6
 - PyVmomi
 notes:
-    - Please make sure that the user used for M(vmware_guest) has the correct level of privileges.
+    - Please make sure that the user used for vmware_guest has the correct level of privileges.
     - For example, following is the list of minimum privileges required by users to create virtual machines.
     - "   DataStore > Allocate Space"
     - "   Virtual Machine > Configuration > Add New Disk"
@@ -38,11 +38,8 @@ notes:
     - "   Network > Assign Network"
     - "   Resource > Assign Virtual Machine to Resource Pool"
     - "Module may require additional privileges as well, which may be required for gathering facts - e.g. ESXi configurations."
-    - Tested on vSphere 5.5, 6.0, 6.5 and 6.7.
-    - Use SCSI disks instead of IDE when you want to expand online disks by specifying a SCSI controller.
-    - Uses SysPrep for Windows VM (depends on 'guest_id' parameter match 'win') with PyVmomi.
-    - In order to change the VM's parameters (e.g. number of CPUs), the VM must be powered off unless the hot-add
-      support is enabled and the C(state=present) must be used to apply the changes.
+    - Tested on vSphere 5.5, 6.0, 6.5 and 6.7
+    - Use SCSI disks instead of IDE when you want to expand online disks by specifying a SCSI controller
     - "For additional information please visit Ansible VMware community wiki - U(https://github.com/ansible/community/wiki/VMware)."
 options:
   state:
@@ -154,8 +151,6 @@ options:
     - ' - C(cpu_reservation) (integer): The amount of CPU resource that is guaranteed available to the virtual machine.
           Unit is MHz. version_added: 2.5'
     - ' - C(version) (integer): The Virtual machine hardware versions. Default is 10 (ESXi 5.5 and onwards).
-          If value specified as C(latest), version is set to the most current virtual hardware supported on the host.
-          C(latest) is added in version 2.10.
           Please check VMware documentation for correct virtual machine hardware version.
           Incorrect hardware version may lead to failure in deployment. If hardware version is already equal to the given
           version then no action is taken. version_added: 2.6'
@@ -232,25 +227,10 @@ options:
     - "vmware-tools needs to be installed on the given virtual machine in order to work with this parameter."
     default: 'no'
     type: bool
-  wait_for_ip_address_timeout:
-    description:
-    - Define a timeout (in seconds) for the wait_for_ip_address parameter.
-    default: '300'
-    type: int
-    version_added: '2.10'
-  wait_for_customization_timeout:
-    description:
-    - Define a timeout (in seconds) for the wait_for_customization parameter.
-    - Be careful when setting this value since the time guest customization took may differ among guest OSes.
-    default: '3600'
-    type: int
-    version_added: '2.10'
   wait_for_customization:
     description:
     - Wait until vCenter detects all guest customizations as successfully completed.
     - When enabled, the VM will automatically be powered on.
-    - "If vCenter does not detect guest customization start or succeed, failed events after time
-      C(wait_for_customization_timeout) parameter specified, warning message will be printed and task result is fail."
     default: 'no'
     type: bool
     version_added: '2.8'
@@ -283,12 +263,6 @@ options:
        This is specifically the case for removing a powered on the virtual machine when C(state) is set to C(absent).'
     default: 'no'
     type: bool
-  delete_from_inventory:
-    description:
-    - Whether to delete Virtual machine from inventory or delete from disk.
-    default: False
-    type: bool
-    version_added: '2.10'
   datacenter:
     description:
     - Destination datacenter for the deploy operation.
@@ -379,10 +353,8 @@ options:
     version_added: '2.3'
   vapp_properties:
     description:
-    - A list of vApp properties.
-    - 'For full list of attributes and types refer to:'
-    - 'U(https://vdc-download.vmware.com/vmwb-repository/dcr-public/6b586ed2-655c-49d9-9029-bc416323cb22/
-      fa0b429a-a695-4c11-b7d2-2cbc284049dc/doc/vim.vApp.PropertyInfo.html)'
+    - A list of vApp properties
+    - 'For full list of attributes and types refer to: U(https://github.com/vmware/pyvmomi/blob/master/docs/vim/vApp/PropertyInfo.rst)'
     - 'Basic attributes are:'
     - ' - C(id) (string): Property id - required.'
     - ' - C(value) (string): Property value.'
@@ -439,7 +411,6 @@ EXAMPLES = r'''
       netmask: 255.255.255.0
       device_type: vmxnet3
     wait_for_ip_address: yes
-    wait_for_ip_address_timeout: 600
   delegate_to: localhost
   register: deploy_vm
 
@@ -457,8 +428,6 @@ EXAMPLES = r'''
     - size_gb: 10
       type: thin
       datastore: g73_datastore
-    # Add another disk from an existing VMDK
-    - filename: "[datastore1] testvms/testvm_2_1/testvm_2_1.vmdk"
     hardware:
       memory_mb: 512
       num_cpus: 6
@@ -566,17 +535,6 @@ EXAMPLES = r'''
     state: absent
   delegate_to: localhost
 
-- name: Remove a virtual machine from inventory
-  vmware_guest:
-    hostname: "{{ vcenter_hostname }}"
-    username: "{{ vcenter_username }}"
-    password: "{{ vcenter_password }}"
-    validate_certs: no
-    name: vm_name
-    delete_from_inventory: True
-    state: absent
-  delegate_to: localhost
-
 - name: Manipulate vApp properties
   vmware_guest:
     hostname: "{{ vcenter_hostname }}"
@@ -620,24 +578,6 @@ EXAMPLES = r'''
       num_cpus: 2
       scsi: paravirtual
   delegate_to: localhost
-
-- name: Create a diskless VM
-  vmware_guest:
-    validate_certs: False
-    hostname: "{{ vcenter_hostname }}"
-    username: "{{ vcenter_username }}"
-    password: "{{ vcenter_password }}"
-    datacenter: "{{ dc1 }}"
-    state: poweredoff
-    cluster: "{{ ccr1 }}"
-    name: diskless_vm
-    folder: /Asia-Datacenter1/vm
-    guest_id: centos64Guest
-    datastore: "{{ ds1 }}"
-    hardware:
-        memory_mb: 1024
-        num_cpus: 2
-        num_cpu_cores_per_socket: 1
 '''
 
 RETURN = r'''
@@ -667,7 +607,7 @@ from ansible.module_utils.vmware import (find_obj, gather_vm_facts, get_all_objs
                                          compile_folder_path_for_object, serialize_spec,
                                          vmware_argument_spec, set_vm_power_state, PyVmomi,
                                          find_dvs_by_name, find_dvspg_by_name, wait_for_vm_ip,
-                                         wait_for_task, TaskError, quote_obj_name)
+                                         wait_for_task, TaskError)
 
 
 def list_or_dict(value):
@@ -896,8 +836,6 @@ class PyVmomiCache(object):
         return objects
 
     def get_network(self, network):
-        network = quote_obj_name(network)
-
         if network not in self.networks:
             self.networks[network] = self.find_obj(self.content, [vim.Network], network)
 
@@ -947,22 +885,12 @@ class PyVmomiHelper(PyVmomi):
     def gather_facts(self, vm):
         return gather_vm_facts(self.content, vm)
 
-    def remove_vm(self, vm, delete_from_inventory=False):
+    def remove_vm(self, vm):
         # https://www.vmware.com/support/developer/converter-sdk/conv60_apireference/vim.ManagedEntity.html#destroy
         if vm.summary.runtime.powerState.lower() == 'poweredon':
             self.module.fail_json(msg="Virtual machine %s found in 'powered on' state, "
                                       "please use 'force' parameter to remove or poweroff VM "
                                       "and try removing VM again." % vm.name)
-        # Delete VM from Inventory
-        if delete_from_inventory:
-            try:
-                vm.UnregisterVM()
-            except (vim.fault.TaskInProgress,
-                    vmodl.RuntimeFault) as e:
-                return {'changed': self.change_applied, 'failed': True, 'msg': e.msg, 'op': 'UnregisterVM'}
-            self.change_applied = True
-            return {'changed': self.change_applied, 'failed': False}
-        # Delete VM from Disk
         task = vm.Destroy()
         self.wait_for_task(task)
         if task.info.state == 'error':
@@ -1318,55 +1246,42 @@ class PyVmomiHelper(PyVmomi):
             if 'version' in self.params['hardware']:
                 hw_version_check_failed = False
                 temp_version = self.params['hardware'].get('version', 10)
-                if isinstance(temp_version, str) and temp_version.lower() == 'latest':
-                    # Check is to make sure vm_obj is not of type template
-                    if vm_obj and not vm_obj.config.template:
-                        try:
-                            task = vm_obj.UpgradeVM_Task()
-                            self.wait_for_task(task)
-                            if task.info.state == 'error':
-                                return {'changed': self.change_applied, 'failed': True, 'msg': task.info.error.msg, 'op': 'upgrade'}
-                        except vim.fault.AlreadyUpgraded:
-                            # Don't fail if VM is already upgraded.
-                            pass
-                else:
-                    try:
-                        temp_version = int(temp_version)
-                    except ValueError:
-                        hw_version_check_failed = True
+                try:
+                    temp_version = int(temp_version)
+                except ValueError:
+                    hw_version_check_failed = True
 
-                    if temp_version not in range(3, 16):
-                        hw_version_check_failed = True
+                if temp_version not in range(3, 15):
+                    hw_version_check_failed = True
 
-                    if hw_version_check_failed:
-                        self.module.fail_json(msg="Failed to set hardware.version '%s' value as valid"
+                if hw_version_check_failed:
+                    self.module.fail_json(msg="Failed to set hardware.version '%s' value as valid"
                                               " values range from 3 (ESX 2.x) to 14 (ESXi 6.5 and greater)." % temp_version)
-                    # Hardware version is denoted as "vmx-10"
-                    version = "vmx-%02d" % temp_version
-                    self.configspec.version = version
-                    if vm_obj is None or self.configspec.version != vm_obj.config.version:
-                        self.change_detected = True
-                    # Check is to make sure vm_obj is not of type template
-                    if vm_obj and not vm_obj.config.template:
-                        # VM exists and we need to update the hardware version
-                        current_version = vm_obj.config.version
-                        # current_version = "vmx-10"
-                        version_digit = int(current_version.split("-", 1)[-1])
-                        if temp_version < version_digit:
-                            self.module.fail_json(msg="Current hardware version '%d' which is greater than the specified"
+                # Hardware version is denoted as "vmx-10"
+                version = "vmx-%02d" % temp_version
+                self.configspec.version = version
+                if vm_obj is None or self.configspec.version != vm_obj.config.version:
+                    self.change_detected = True
+                if vm_obj is not None:
+                    # VM exists and we need to update the hardware version
+                    current_version = vm_obj.config.version
+                    # current_version = "vmx-10"
+                    version_digit = int(current_version.split("-", 1)[-1])
+                    if temp_version < version_digit:
+                        self.module.fail_json(msg="Current hardware version '%d' which is greater than the specified"
                                                   " version '%d'. Downgrading hardware version is"
                                                   " not supported. Please specify version greater"
                                                   " than the current version." % (version_digit,
                                                                                   temp_version))
-                        new_version = "vmx-%02d" % temp_version
-                        try:
-                            task = vm_obj.UpgradeVM_Task(new_version)
-                            self.wait_for_task(task)
-                            if task.info.state == 'error':
-                                return {'changed': self.change_applied, 'failed': True, 'msg': task.info.error.msg, 'op': 'upgrade'}
-                        except vim.fault.AlreadyUpgraded:
-                            # Don't fail if VM is already upgraded.
-                            pass
+                    new_version = "vmx-%02d" % temp_version
+                    try:
+                        task = vm_obj.UpgradeVM_Task(new_version)
+                        self.wait_for_task(task)
+                        if task.info.state == 'error':
+                            return {'changed': self.change_applied, 'failed': True, 'msg': task.info.error.msg, 'op': 'upgrade'}
+                    except vim.fault.AlreadyUpgraded:
+                        # Don't fail if VM is already upgraded.
+                        pass
 
             if 'virt_based_security' in self.params['hardware']:
                 host_version = self.select_host().summary.config.product.version
@@ -1750,29 +1665,27 @@ class PyVmomiHelper(PyVmomi):
             self.configspec.vAppConfig = new_vmconfig_spec
             self.change_detected = True
 
-    def customize_customvalues(self, vm_obj, config_spec):
+    def customize_customvalues(self, vm_obj):
         if len(self.params['customvalues']) == 0:
             return
 
-        vm_custom_spec = config_spec
-        vm_custom_spec.extraConfig = []
-
-        changed = False
         facts = self.gather_facts(vm_obj)
         for kv in self.params['customvalues']:
             if 'key' not in kv or 'value' not in kv:
                 self.module.exit_json(msg="customvalues items required both 'key' and 'value' fields.")
 
+            key_id = None
+            for field in self.content.customFieldsManager.field:
+                if field.name == kv['key']:
+                    key_id = field.key
+                    break
+
+            if not key_id:
+                self.module.fail_json(msg="Unable to find custom value key %s" % kv['key'])
+
             # If kv is not kv fetched from facts, change it
             if kv['key'] not in facts['customvalues'] or facts['customvalues'][kv['key']] != kv['value']:
-                option = vim.option.OptionValue()
-                option.key = kv['key']
-                option.value = kv['value']
-
-                vm_custom_spec.extraConfig.append(option)
-                changed = True
-
-            if changed:
+                self.content.customFieldsManager.SetField(entity=vm_obj, key=key_id, value=kv['value'])
                 self.change_detected = True
 
     def customize_vm(self, vm_obj):
@@ -1851,8 +1764,7 @@ class PyVmomiHelper(PyVmomi):
             ident.userData.computerName = vim.vm.customization.FixedName()
             # computer name will be truncated to 15 characters if using VM name
             default_name = self.params['name'].replace(' ', '')
-            punctuation = string.punctuation.replace('-', '')
-            default_name = ''.join([c for c in default_name if c not in punctuation])
+            default_name = ''.join([c for c in default_name if c not in string.punctuation])
             ident.userData.computerName.name = str(self.params['customization'].get('hostname', default_name[0:15]))
             ident.userData.fullName = str(self.params['customization'].get('fullname', 'Administrator'))
             ident.userData.orgName = str(self.params['customization'].get('orgname', 'ACME'))
@@ -1986,15 +1898,34 @@ class PyVmomiHelper(PyVmomi):
         self.module.fail_json(
             msg="No size, size_kb, size_mb, size_gb or size_tb attribute found into disk configuration")
 
+    def find_vmdk(self, vmdk_path):
+        """
+        Takes a vsphere datastore path in the format
+
+            [datastore_name] path/to/file.vmdk
+
+        Returns vsphere file object or raises RuntimeError
+        """
+        datastore_name, vmdk_fullpath, vmdk_filename, vmdk_folder = self.vmdk_disk_path_split(vmdk_path)
+
+        datastore = self.cache.find_obj(self.content, [vim.Datastore], datastore_name)
+
+        if datastore is None:
+            self.module.fail_json(msg="Failed to find the datastore %s" % datastore_name)
+
+        return self.find_vmdk_file(datastore, vmdk_fullpath, vmdk_filename, vmdk_folder)
+
     def add_existing_vmdk(self, vm_obj, expected_disk_spec, diskspec, scsi_ctl):
         """
         Adds vmdk file described by expected_disk_spec['filename'], retrieves the file
         information and adds the correct spec to self.configspec.deviceChange.
         """
         filename = expected_disk_spec['filename']
-        # If this is a new disk, or the disk file names are different
+        # if this is a new disk, or the disk file names are different
         if (vm_obj and diskspec.device.backing.fileName != filename) or vm_obj is None:
-            diskspec.device.backing.fileName = filename
+            vmdk_file = self.find_vmdk(expected_disk_spec['filename'])
+            diskspec.device.backing.fileName = expected_disk_spec['filename']
+            diskspec.device.capacityInKB = VmomiSupport.vmodlTypes['long'](vmdk_file.fileSize / 1024)
             diskspec.device.key = -1
             self.change_detected = True
             self.configspec.deviceChange.append(diskspec)
@@ -2163,24 +2094,10 @@ class PyVmomiHelper(PyVmomi):
         if len(self.params['disk']) != 0:
             # TODO: really use the datastore for newly created disks
             if 'autoselect_datastore' in self.params['disk'][0] and self.params['disk'][0]['autoselect_datastore']:
-                datastores = []
-
-                if self.params['cluster']:
-                    cluster = self.find_cluster_by_name(self.params['cluster'], self.content)
-
-                    for host in cluster.host:
-                        for mi in host.configManager.storageSystem.fileSystemVolumeInfo.mountInfo:
-                            if mi.volume.type == "VMFS":
-                                datastores.append(self.cache.find_obj(self.content, [vim.Datastore], mi.volume.name))
-                elif self.params['esxi_hostname']:
-                    host = self.find_hostsystem_by_name(self.params['esxi_hostname'])
-
-                    for mi in host.configManager.storageSystem.fileSystemVolumeInfo.mountInfo:
-                        if mi.volume.type == "VMFS":
-                            datastores.append(self.cache.find_obj(self.content, [vim.Datastore], mi.volume.name))
-                else:
-                    datastores = self.cache.get_all_objs(self.content, [vim.Datastore])
-                    datastores = [x for x in datastores if self.cache.get_parent_datacenter(x).name == self.params['datacenter']]
+                datastores = self.cache.get_all_objs(self.content, [vim.Datastore])
+                datastores = [x for x in datastores if self.cache.get_parent_datacenter(x).name == self.params['datacenter']]
+                if datastores is None or len(datastores) == 0:
+                    self.module.fail_json(msg="Unable to find a datastore list when autoselecting")
 
                 datastore_freespace = 0
                 for ds in datastores:
@@ -2429,10 +2346,7 @@ class PyVmomiHelper(PyVmomi):
         for nw in self.params['networks']:
             for key in nw:
                 # We don't need customizations for these keys
-                if key == 'type' and nw['type'] == 'dhcp':
-                    network_changes = True
-                    break
-                if key not in ('device_type', 'mac', 'name', 'vlan', 'type', 'start_connected', 'dvswitch_name'):
+                if key not in ('device_type', 'mac', 'name', 'vlan', 'type', 'start_connected'):
                     network_changes = True
                     break
 
@@ -2552,21 +2466,16 @@ class PyVmomiHelper(PyVmomi):
                     return {'changed': self.change_applied, 'failed': True, 'msg': task.info.error.msg, 'op': 'annotation'}
 
             if self.params['customvalues']:
-                vm_custom_spec = vim.vm.ConfigSpec()
-                self.customize_customvalues(vm_obj=vm, config_spec=vm_custom_spec)
-                task = vm.ReconfigVM_Task(vm_custom_spec)
-                self.wait_for_task(task)
-                if task.info.state == 'error':
-                    return {'changed': self.change_applied, 'failed': True, 'msg': task.info.error.msg, 'op': 'customvalues'}
+                self.customize_customvalues(vm_obj=vm)
 
             if self.params['wait_for_ip_address'] or self.params['wait_for_customization'] or self.params['state'] in ['poweredon', 'restarted']:
                 set_vm_power_state(self.content, vm, 'poweredon', force=False)
 
                 if self.params['wait_for_ip_address']:
-                    wait_for_vm_ip(self.content, vm, self.params['wait_for_ip_address_timeout'])
+                    self.wait_for_vm_ip(vm)
 
                 if self.params['wait_for_customization']:
-                    is_customization_ok = self.wait_for_customization(vm=vm, timeout=self.params['wait_for_customization_timeout'])
+                    is_customization_ok = self.wait_for_customization(vm)
                     if not is_customization_ok:
                         vm_facts = self.gather_facts(vm)
                         return {'changed': self.change_applied, 'failed': True, 'instance': vm_facts, 'op': 'customization'}
@@ -2595,7 +2504,7 @@ class PyVmomiHelper(PyVmomi):
         self.configure_disks(vm_obj=self.current_vm_obj)
         self.configure_network(vm_obj=self.current_vm_obj)
         self.configure_cdrom(vm_obj=self.current_vm_obj)
-        self.customize_customvalues(vm_obj=self.current_vm_obj, config_spec=self.configspec)
+        self.customize_customvalues(vm_obj=self.current_vm_obj)
         self.configure_resource_alloc_info(vm_obj=self.current_vm_obj)
         self.configure_vapp_properties(vm_obj=self.current_vm_obj)
 
@@ -2701,7 +2610,7 @@ class PyVmomiHelper(PyVmomi):
         for nw in self.params['networks']:
             for key in nw:
                 # We don't need customizations for these keys
-                if key not in ('device_type', 'mac', 'name', 'vlan', 'type', 'start_connected', 'dvswitch_name'):
+                if key not in ('device_type', 'mac', 'name', 'vlan', 'type', 'start_connected'):
                     network_changes = True
                     break
         if len(self.params['customization']) > 1 or network_changes or self.params.get('customization_spec'):
@@ -2720,10 +2629,9 @@ class PyVmomiHelper(PyVmomi):
 
         if self.params['wait_for_customization']:
             set_vm_power_state(self.content, self.current_vm_obj, 'poweredon', force=False)
-            is_customization_ok = self.wait_for_customization(vm=self.current_vm_obj, timeout=self.params['wait_for_customization_timeout'])
+            is_customization_ok = self.wait_for_customization(self.current_vm_obj)
             if not is_customization_ok:
-                return {'changed': self.change_applied, 'failed': True,
-                        'msg': 'Wait for customization failed due to timeout', 'op': 'wait_for_customize_exist'}
+                return {'changed': self.change_applied, 'failed': True, 'op': 'wait_for_customize_exist'}
 
         return {'changed': self.change_applied, 'failed': False}
 
@@ -2745,14 +2653,28 @@ class PyVmomiHelper(PyVmomi):
             time.sleep(poll_interval)
         self.change_applied = self.change_applied or task.info.state == 'success'
 
+    def wait_for_vm_ip(self, vm, poll=100, sleep=5):
+        ips = None
+        facts = {}
+        thispoll = 0
+        while not ips and thispoll <= poll:
+            newvm = self.get_vm()
+            facts = self.gather_facts(newvm)
+            if facts['ipv4'] or facts['ipv6']:
+                ips = True
+            else:
+                time.sleep(sleep)
+                thispoll += 1
+
+        return facts
+
     def get_vm_events(self, vm, eventTypeIdList):
         byEntity = vim.event.EventFilterSpec.ByEntity(entity=vm, recursion="self")
         filterSpec = vim.event.EventFilterSpec(entity=byEntity, eventTypeId=eventTypeIdList)
         eventManager = self.content.eventManager
         return eventManager.QueryEvent(filterSpec)
 
-    def wait_for_customization(self, vm, timeout=3600, sleep=10):
-        poll = int(timeout // sleep)
+    def wait_for_customization(self, vm, poll=10000, sleep=10):
         thispoll = 0
         while thispoll <= poll:
             eventStarted = self.get_vm_events(vm, ['CustomizationStartedEvent'])
@@ -2762,24 +2684,18 @@ class PyVmomiHelper(PyVmomi):
                     eventsFinishedResult = self.get_vm_events(vm, ['CustomizationSucceeded', 'CustomizationFailed'])
                     if len(eventsFinishedResult):
                         if not isinstance(eventsFinishedResult[0], vim.event.CustomizationSucceeded):
-                            self.module.warn("Customization failed with error {%s}:{%s}"
-                                             % (eventsFinishedResult[0]._wsdlName, eventsFinishedResult[0].fullFormattedMessage))
+                            self.module.fail_json(msg='Customization failed with error {0}:\n{1}'.format(
+                                eventsFinishedResult[0]._wsdlName, eventsFinishedResult[0].fullFormattedMessage))
                             return False
-                        else:
-                            return True
+                        break
                     else:
                         time.sleep(sleep)
                         thispoll += 1
-                if len(eventsFinishedResult) == 0:
-                    self.module.warn('Waiting for customization result event timed out.')
-                    return False
+                return True
             else:
                 time.sleep(sleep)
                 thispoll += 1
-        if len(eventStarted):
-            self.module.warn('Waiting for customization result event timed out.')
-        else:
-            self.module.warn('Waiting for customization start event timed out.')
+        self.module.fail_json('waiting for customizations timed out.')
         return False
 
 
@@ -2806,7 +2722,6 @@ def main():
         esxi_hostname=dict(type='str'),
         cluster=dict(type='str'),
         wait_for_ip_address=dict(type='bool', default=False),
-        wait_for_ip_address_timeout=dict(type='int', default=300),
         state_change_timeout=dict(type='int', default=0),
         snapshot_src=dict(type='str'),
         linked_clone=dict(type='bool', default=False),
@@ -2815,11 +2730,9 @@ def main():
         customization=dict(type='dict', default={}, no_log=True),
         customization_spec=dict(type='str', default=None),
         wait_for_customization=dict(type='bool', default=False),
-        wait_for_customization_timeout=dict(type='int', default=3600),
         vapp_properties=dict(type='list', default=[]),
         datastore=dict(type='str'),
         convert=dict(type='str', choices=['thin', 'thick', 'eagerzeroedthick']),
-        delete_from_inventory=dict(type='bool', default=False),
     )
 
     module = AnsibleModule(argument_spec=argument_spec,
@@ -2854,7 +2767,7 @@ def main():
             if module.params['force']:
                 # has to be poweredoff first
                 set_vm_power_state(pyv.content, vm, 'poweredoff', module.params['force'])
-            result = pyv.remove_vm(vm, module.params['delete_from_inventory'])
+            result = pyv.remove_vm(vm)
         elif module.params['state'] == 'present':
             if module.check_mode:
                 result.update(
@@ -2878,7 +2791,7 @@ def main():
             if tmp_result['changed']:
                 result["changed"] = True
                 if module.params['state'] in ['poweredon', 'restarted', 'rebootguest'] and module.params['wait_for_ip_address']:
-                    wait_result = wait_for_vm_ip(pyv.content, vm, module.params['wait_for_ip_address_timeout'])
+                    wait_result = wait_for_vm_ip(pyv.content, vm)
                     if not wait_result:
                         module.fail_json(msg='Waiting for IP address timed out')
                     tmp_result['instance'] = wait_result

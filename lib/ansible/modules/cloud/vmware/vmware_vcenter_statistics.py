@@ -141,10 +141,6 @@ class ChangeHelper:
         self.old = old
         self.new = new
 
-    def __eq__(self, other):
-        return ((self.key, self.new.enabled, self.new.level) ==
-                (other.key, other.new.enabled, other.new.level))
-
     def __gt__(self, other):
         if self.key < other.key:
             # You cannot disable daily if weekly is enabled, so later
@@ -157,16 +153,7 @@ class ChangeHelper:
             else:
                 return self.new.level < other.old.level
         else:
-            return not (other > self)
-
-    def __ge__(self, other):
-        return (self > other) or (self == other)
-
-    def __lt__(self, other):
-        return not (self >= other)
-
-    def __le__(self, other):
-        return not (self > other)
+            return not (self.old > self.new)
 
 
 class VmwareVcenterStatistics(PyVmomi):

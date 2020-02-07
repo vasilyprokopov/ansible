@@ -7,7 +7,7 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-DOCUMENTATION = r'''
+DOCUMENTATION = '''
 ---
 module: zabbix_map
 author:
@@ -38,7 +38,7 @@ description:
         C(zbx_trigger_draw_style) contains indicator draw style. Possible values are the same as for C(zbx_draw_style)."
 requirements:
     - "python >= 2.6"
-    - "zabbix-api >= 0.5.4"
+    - "zabbix-api >= 0.5.3"
     - pydotplus
     - webcolors
     - Pillow
@@ -50,13 +50,11 @@ options:
             - Name of the map.
         required: true
         aliases: [ "map_name" ]
-        type: str
     data:
         description:
             - Graph written in DOT language.
         required: false
         aliases: [ "dot_data" ]
-        type: str
     state:
         description:
             - State of the map.
@@ -65,25 +63,21 @@ options:
         required: false
         choices: ['present', 'absent']
         default: "present"
-        type: str
     width:
         description:
             - Width of the map.
         required: false
         default: 800
-        type: int
     height:
         description:
             - Height of the map.
         required: false
         default: 600
-        type: int
     margin:
         description:
             - Size of white space between map's borders and its elements.
         required: false
         default: 40
-        type: int
     expand_problem:
         description:
             - Whether the problem trigger will be displayed for elements with a single problem.
@@ -102,21 +96,19 @@ options:
         required: false
         choices: ['label', 'ip', 'name', 'status', 'nothing', 'custom']
         default: "name"
-        type: str
     default_image:
         description:
             - Name of the Zabbix image used to display the element if this element doesn't have the C(zbx_image) attribute defined.
         required: false
         aliases: [ "image" ]
-        type: str
 
 extends_documentation_fragment:
     - zabbix
 '''
 
-RETURN = r''' # '''
+RETURN = ''' # '''
 
-EXAMPLES = r'''
+EXAMPLES = '''
 ###
 ### Example inventory:
 # [web]
@@ -766,7 +758,7 @@ def main():
             data=dict(type='str', required=False, aliases=['dot_data']),
             width=dict(type='int', default=800),
             height=dict(type='int', default=600),
-            state=dict(type='str', default="present", choices=['present', 'absent']),
+            state=dict(default="present", choices=['present', 'absent']),
             default_image=dict(type='str', required=False, aliases=['image']),
             margin=dict(type='int', default=40),
             expand_problem=dict(type='bool', default=True),

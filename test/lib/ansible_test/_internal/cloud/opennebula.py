@@ -59,8 +59,6 @@ class OpenNebulaCloudEnvironment(CloudEnvironment):
 
         ansible_vars.update(dict(parser.items('default')))
 
-        display.sensitive.add(ansible_vars.get('opennebula_password'))
-
         return CloudEnvironmentConfig(
             ansible_vars=ansible_vars,
         )

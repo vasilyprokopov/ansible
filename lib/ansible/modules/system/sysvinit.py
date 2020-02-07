@@ -87,28 +87,27 @@ EXAMPLES = '''
         - 5
 '''
 
-RETURN = r'''
+RETURN = '''
 results:
     description: results from actions taken
     returned: always
     type: complex
-    sample: {
-            "attempts": 1,
-            "changed": true,
-            "name": "apache2",
-            "status": {
-                "enabled": {
-                    "changed": true,
-                    "rc": 0,
-                    "stderr": "",
-                    "stdout": ""
-                },
-                "stopped": {
-                    "changed": true,
-                    "rc": 0,
-                    "stderr": "",
-                    "stdout": "Stopping web server: apache2.\n"
-                }
+    contains:
+        "attempts": 1
+        "changed": true
+        "name": "apache2"
+        "status": {
+            "enabled": {
+                "changed": true,
+                "rc": 0,
+                "stderr": "",
+                "stdout": ""
+            },
+            "stopped": {
+                "changed": true,
+                "rc": 0,
+                "stderr": "",
+                "stdout": "Stopping web server: apache2.\n"
             }
         }
 '''

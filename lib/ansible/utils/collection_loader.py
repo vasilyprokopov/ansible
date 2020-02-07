@@ -103,29 +103,15 @@ class AnsibleCollectionLoader(with_metaclass(Singleton, object)):
         return self._default_collection
 
     def find_module(self, fullname, path=None):
-        if self._find_module(fullname, path, load=False)[0]:
+        # this loader is only concerned with items under the Ansible Collections namespace hierarchy, ignore others
+        if fullname and fullname.split('.', 1)[0] == 'ansible_collections':
             return self
 
         return None
 
     def load_module(self, fullname):
-        mod = self._find_module(fullname, None, load=True)[1]
-
-        if not mod:
-            raise ImportError('module {0} not found'.format(fullname))
-
-        return mod
-
-    def _find_module(self, fullname, path, load):
-        # this loader is only concerned with items under the Ansible Collections namespace hierarchy, ignore others
-        if not fullname.startswith('ansible_collections.') and fullname != 'ansible_collections':
-            return False, None
-
         if sys.modules.get(fullname):
-            if not load:
-                return True, None
-
-            return True, sys.modules[fullname]
+            return sys.modules[fullname]
 
         newmod = None
 
@@ -167,21 +153,14 @@ class AnsibleCollectionLoader(with_metaclass(Singleton, object)):
 
                 if not map_package:
                     raise KeyError('invalid synthetic map package definition (no target "map" defined)')
-
-                if not load:
-                    return True, None
-
                 mod = import_module(map_package + synpkg_remainder)
 
                 sys.modules[fullname] = mod
 
-                return True, mod
+                return mod
             elif pkg_type == 'flatmap':
                 raise NotImplementedError()
             elif pkg_type == 'pkg_only':
-                if not load:
-                    return True, None
-
                 newmod = ModuleType(fullname)
                 newmod.__package__ = fullname
                 newmod.__file__ = '<ansible_synthetic_collection_package>'
@@ -191,7 +170,7 @@ class AnsibleCollectionLoader(with_metaclass(Singleton, object)):
                 if not synpkg_def.get('allow_external_subpackages'):
                     # if external subpackages are NOT allowed, we're done
                     sys.modules[fullname] = newmod
-                    return True, newmod
+                    return newmod
 
                 # if external subpackages ARE allowed, check for on-disk implementations and return a normal
                 # package if we find one, otherwise return the one we created here
@@ -216,9 +195,6 @@ class AnsibleCollectionLoader(with_metaclass(Singleton, object)):
                                     candidate_child_path + '.py']:
                     if not os.path.isfile(to_bytes(source_path)):
                         continue
-
-                    if not load:
-                        return True, None
 
                     with open(to_bytes(source_path), 'rb') as fd:
                         source = fd.read()
@@ -251,16 +227,16 @@ class AnsibleCollectionLoader(with_metaclass(Singleton, object)):
                 # FIXME: decide cases where we don't actually want to exec the code?
                 exec(code_object, newmod.__dict__)
 
-            return True, newmod
+            return newmod
 
         # even if we didn't find one on disk, fall back to a synthetic package if we have one...
         if newmod:
             sys.modules[fullname] = newmod
-            return True, newmod
+            return newmod
 
         # FIXME: need to handle the "no dirs present" case for at least the root and synthetic internal collections like ansible.builtin
 
-        return False, None
+        raise ImportError('module {0} not found'.format(fullname))
 
     @staticmethod
     def _extend_path_with_ns(path, ns):
@@ -290,15 +266,6 @@ class AnsibleFlatMapLoader(object):
         for root, dirs, files in os.walk(root_path):
             # add all files in this dir that don't have a blacklisted extension
             flat_files.extend(((root, f) for f in files if not any((f.endswith(ext) for ext in self._extension_blacklist))))
-
-        # HACK: Put Windows modules at the end of the list. This makes collection_loader behave
-        # the same way as plugin loader, preventing '.ps1' from modules being selected before '.py'
-        # modules simply because '.ps1' files may be above '.py' files in the flat_files list.
-        #
-        # The expected sort order is paths in the order they were in 'flat_files'
-        # with paths ending in '/windows' at the end, also in the original order they were
-        # in 'flat_files'. The .sort() method is guaranteed to be stable, so original order is preserved.
-        flat_files.sort(key=lambda p: p[0].endswith('/windows'))
         self._dirtree = flat_files
 
     def find_file(self, filename):
@@ -483,7 +450,7 @@ class AnsibleCollectionRef:
     @staticmethod
     def is_valid_collection_name(collection_name):
         """
-        Validates if the given string is a well-formed collection name (does not look up the collection itself)
+        Validates if is string is a well-formed collection name (does not look up the collection itself)
         :param collection_name: candidate collection name to validate (a valid name is of the form 'ns.collname')
         :return: True if the collection name passed is well-formed, False otherwise
         """
@@ -552,7 +519,7 @@ def get_collection_name_from_path(path):
             # strip off the common prefix (handle weird testing cases of nested collection roots, eg)
             collection_remnant = n_path[len(coll_path):]
             # commonprefix may include the trailing /, prepend to the remnant if necessary (eg trailing / on root)
-            if collection_remnant and collection_remnant[0] != '/':
+            if collection_remnant[0] != '/':
                 collection_remnant = '/' + collection_remnant
             # the path lives under this collection root, see if it maps to a collection
             found_collection = _N_COLLECTION_PATH_RE.search(collection_remnant)

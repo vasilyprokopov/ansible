@@ -9,14 +9,13 @@ import os
 from ansible.module_utils.common.file import is_executable
 
 
-def get_bin_path(arg, opt_dirs=None, required=None):
+def get_bin_path(arg, required=False, opt_dirs=None):
     '''
-    Find system executable in PATH. Raises ValueError if executable is not found.
+    find system executable in PATH.
     Optional arguments:
-       - required:  [Deprecated] Prior to 2.10, if executable is not found and required is true it raises an Exception.
-                    In 2.10 and later, an Exception is always raised. This parameter will be removed in 2.14.
+       - required:  if executable is not found and required is true it produces an Exception
        - opt_dirs:  optional list of directories to search in addition to PATH
-    If found return full path, otherwise raise ValueError.
+    if found return full path; otherwise return None
     '''
     opt_dirs = [] if opt_dirs is None else opt_dirs
 
@@ -38,7 +37,7 @@ def get_bin_path(arg, opt_dirs=None, required=None):
         if os.path.exists(path) and not os.path.isdir(path) and is_executable(path):
             bin_path = path
             break
-    if bin_path is None:
+    if required and bin_path is None:
         raise ValueError('Failed to find required executable %s in paths: %s' % (arg, os.pathsep.join(paths)))
 
     return bin_path

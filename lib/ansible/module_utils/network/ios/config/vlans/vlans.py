@@ -100,9 +100,6 @@ class Vlans(ConfigBase):
                   to the desired configuration
         """
         state = self._module.params['state']
-        if state in ('overridden', 'merged', 'replaced') and not want:
-            self._module.fail_json(msg='value of config parameter must not be empty for state {0}'.format(state))
-
         if state == 'overridden':
             commands = self._state_overridden(want, have, state)
         elif state == 'deleted':
@@ -146,28 +143,16 @@ class Vlans(ConfigBase):
         """
         commands = []
 
-        want_local = want
         for each in have:
-            count = 0
-            for every in want_local:
+            for every in want:
                 if each['vlan_id'] == every['vlan_id']:
                     break
-                count += 1
             else:
                 # We didn't find a matching desired state, which means we can
                 # pretend we recieved an empty desired state.
                 commands.extend(self._clear_config(every, each, state))
                 continue
             commands.extend(self._set_config(every, each))
-            # as the pre-existing VLAN are now configured by
-            # above set_config call, deleting the respective
-            # VLAN entry from the want_local list
-            del want_local[count]
-
-        # Iterating through want_local list which now only have new VLANs to be
-        # configured
-        for each in want_local:
-            commands.extend(self._set_config(each, dict()))
 
         return commands
 

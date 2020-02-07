@@ -105,13 +105,13 @@ options:
         changes are not copied to non-volatile storage by default.  Using
         this argument will change that before.  If the argument is set to
         I(always), then the running-config will always be copied to the
-        startup configuration and the I(modified) flag will always be set to
+        startup-config and the I(modified) flag will always be set to
         True.  If the argument is set to I(modified), then the running-config
-        will only be copied to the startup configuration if it has changed since
-        the last save to startup configuration.  If the argument is set to
+        will only be copied to the startup-config if it has changed since
+        the last save to startup-config.  If the argument is set to
         I(never), the running-config will never be copied to the
-        startup configuration.  If the argument is set to I(changed), then the running-config
-        will only be copied to the startup configuration if the task has made a change.
+        startup-config.  If the argument is set to I(changed), then the running-config
+        will only be copied to the startup-config if the task has made a change.
     default: never
     choices: ['always', 'never', 'modified', 'changed']
     version_added: "2.5"
@@ -120,7 +120,7 @@ options:
       - When using the C(ansible-playbook --diff) command line argument
         the module can generate diffs against different sources.
       - When this option is configure as I(startup), the module will return
-        the diff of the running-config against the startup configuration.
+        the diff of the running-config against the startup-config.
       - When this option is configured as I(intended), the module will
         return the diff of the running-config against the configuration
         provided in the C(intended_config) argument.
@@ -160,7 +160,7 @@ options:
     suboptions:
       filename:
         description:
-          - The filename to be used to store the backup configuration. If the filename
+          - The filename to be used to store the backup configuration. If the the filename
             is not given it will be generated based on the hostname, current time and date
             in format defined by <hostname>_config.<current-date>@<current-time>
       dir_path:
@@ -184,7 +184,7 @@ EXAMPLES = """
 - name: diff the running-config against a provided config
   aruba_config:
     diff_against: intended
-    intended_config: "{{ lookup('file', 'master.cfg') }}"
+    intended: "{{ lookup('file', 'master.cfg') }}"
 
 - name: configure interface settings
   aruba_config:
@@ -261,9 +261,9 @@ def get_candidate(module):
 def save_config(module, result):
     result['changed'] = True
     if not module.check_mode:
-        run_commands(module, 'write memory')
+        run_commands(module, 'copy running-config startup-config')
     else:
-        module.warn('Skipping command `write memory` '
+        module.warn('Skipping command `copy running-config startup-config` '
                     'due to check_mode.  Configuration not copied to '
                     'non-volatile storage')
 
@@ -369,7 +369,7 @@ def main():
     if module.params['save_when'] == 'always':
         save_config(module, result)
     elif module.params['save_when'] == 'modified':
-        output = run_commands(module, ['show running-config', 'show configuration'])
+        output = run_commands(module, ['show running-config', 'show startup-config'])
 
         running_config = NetworkConfig(contents=output[0], ignore_lines=diff_ignore_lines)
         startup_config = NetworkConfig(contents=output[1], ignore_lines=diff_ignore_lines)
@@ -399,7 +399,7 @@ def main():
 
         elif module.params['diff_against'] == 'startup':
             if not startup_config:
-                output = run_commands(module, 'show configuration')
+                output = run_commands(module, 'show startup-config')
                 contents = output[0]
             else:
                 contents = startup_config.config_text

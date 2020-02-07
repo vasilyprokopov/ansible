@@ -43,7 +43,6 @@ EXAMPLES = '''
 '''
 
 import os
-import platform
 import socket
 import traceback
 
@@ -51,8 +50,9 @@ from ansible.module_utils.basic import (
     AnsibleModule,
     get_distribution,
     get_distribution_version,
+    get_platform,
+    load_platform_subclass,
 )
-from ansible.module_utils.common.sys_info import get_platform_subclass
 from ansible.module_utils.facts.system.service_mgr import ServiceMgrFactCollector
 from ansible.module_utils._text import to_native
 
@@ -86,12 +86,12 @@ class UnimplementedStrategy(object):
         self.unimplemented_error()
 
     def unimplemented_error(self):
-        system = platform.system()
+        platform = get_platform()
         distribution = get_distribution()
         if distribution is not None:
-            msg_platform = '%s (%s)' % (system, distribution)
+            msg_platform = '%s (%s)' % (platform, distribution)
         else:
-            msg_platform = system
+            msg_platform = platform
         self.module.fail_json(
             msg='hostname module cannot be used on platform %s' % msg_platform)
 
@@ -111,8 +111,7 @@ class Hostname(object):
     strategy_class = UnimplementedStrategy
 
     def __new__(cls, *args, **kwargs):
-        new_cls = get_platform_subclass(Hostname)
-        return super(cls, new_cls).__new__(new_cls)
+        return load_platform_subclass(Hostname, args, kwargs)
 
     def __init__(self, module):
         self.module = module
@@ -610,12 +609,6 @@ class OpenSUSELeapHostname(Hostname):
     strategy_class = SystemdStrategy
 
 
-class OpenSUSETumbleweedHostname(Hostname):
-    platform = 'Linux'
-    distribution = 'Opensuse-tumbleweed'
-    strategy_class = SystemdStrategy
-
-
 class AsteraHostname(Hostname):
     platform = 'Linux'
     distribution = '"astralinuxce"'
@@ -631,12 +624,6 @@ class ArchHostname(Hostname):
 class ArchARMHostname(Hostname):
     platform = 'Linux'
     distribution = 'Archarm'
-    strategy_class = SystemdStrategy
-
-
-class ManjaroHostname(Hostname):
-    platform = 'Linux'
-    distribution = 'Manjaro'
     strategy_class = SystemdStrategy
 
 
@@ -793,18 +780,6 @@ class NetBSDHostname(Hostname):
 class NeonHostname(Hostname):
     platform = 'Linux'
     distribution = 'Neon'
-    strategy_class = DebianStrategy
-
-
-class OsmcHostname(Hostname):
-    platform = 'Linux'
-    distribution = 'Osmc'
-    strategy_class = SystemdStrategy
-
-
-class VoidLinuxHostname(Hostname):
-    platform = 'Linux'
-    distribution = 'Void'
     strategy_class = DebianStrategy
 
 

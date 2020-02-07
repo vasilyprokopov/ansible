@@ -74,9 +74,6 @@ class AwsCloudProvider(CloudProvider):
                 REGION='us-east-1',
             )
 
-            display.sensitive.add(values['SECRET_KEY'])
-            display.sensitive.add(values['SECURITY_TOKEN'])
-
             config = self._populate_config_template(config, values)
 
         self._write_config(config)
@@ -102,9 +99,6 @@ class AwsCloudEnvironment(CloudEnvironment):
         )
 
         ansible_vars.update(dict(parser.items('default')))
-
-        display.sensitive.add(ansible_vars.get('aws_secret_key'))
-        display.sensitive.add(ansible_vars.get('security_token'))
 
         if 'aws_cleanup' not in ansible_vars:
             ansible_vars['aws_cleanup'] = not self.managed

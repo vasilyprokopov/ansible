@@ -53,7 +53,7 @@ scaleway_image_facts:
   description: Response from Scaleway API
   returned: success
   type: complex
-  sample:
+  contains:
     "scaleway_image_facts": [
         {
            "arch": "x86_64",

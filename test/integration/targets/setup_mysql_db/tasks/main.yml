@@ -27,57 +27,47 @@
     python_suffix: "-py3"
   when: ansible_python_version is version('3', '>=')
 
-- name: Include distribution specific variables
-  include_vars: "{{ lookup('first_found', params) }}"
-  vars:
-    params:
-      files:
-        - '{{ ansible_facts.distribution }}-{{ ansible_facts.distribution_major_version }}{{ python_suffix }}.yml'
-        - '{{ ansible_facts.distribution }}-{{ ansible_facts.distribution_major_version }}.yml'
-        - '{{ ansible_facts.os_family }}-{{ ansible_facts.distribution_major_version }}{{ python_suffix }}.yml'
-        - '{{ ansible_facts.os_family }}-{{ ansible_facts.distribution_major_version }}.yml'
-        - '{{ ansible_facts.distribution }}{{ python_suffix }}.yml'
-        - '{{ ansible_facts.os_family }}{{ python_suffix }}.yml'
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}{{ python_suffix }}.yml'
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}{{ python_suffix }}.yml'
+        - '{{ ansible_distribution }}{{ python_suffix }}.yml'
+        - '{{ ansible_os_family }}{{ python_suffix }}.yml'
         - 'default{{ python_suffix }}.yml'
-      paths: "{{ role_path }}/vars"
+      paths: '../vars'
 
 - name: install mysqldb_test rpm dependencies
-  yum:
-    name: "{{ mysql_packages }}"
-    state: latest
-  when: ansible_pkg_mgr == 'yum'
-  notify: cleanup mysql
+  yum: name={{ item }} state=latest
+  with_items: "{{mysql_packages}}"
+  when: ansible_pkg_mgr  ==  'yum'
 
 - name: install mysqldb_test rpm dependencies
   dnf:
-    name: '{{ mysql_packages }}'
+    name: '{{ item }}'
     state: latest
     install_weak_deps: False  # mariadb-server has a weak dep on python2 which break Python 3 test environments
-  when: ansible_pkg_mgr == 'dnf'
-  notify: cleanup mysql
+  with_items: "{{mysql_packages}}"
+  when: ansible_pkg_mgr  ==  'dnf'
 
 - name: install mysqldb_test debian dependencies
-  apt:
-    name: "{{ mysql_packages }}"
-    state: latest
-  when: ansible_pkg_mgr == 'apt'
-  notify: cleanup mysql
+  apt: name={{ item }} state=latest
+  with_items: "{{mysql_packages}}"
+  when: ansible_pkg_mgr  ==  'apt'
 
 - name: install mysqldb_test FreeBSD dependencies
   pkgng:
-    name: "{{ mysql_packages }}"
+    name: "{{ item }}"
     state: present
+  with_items: "{{mysql_packages}}"
   when: ansible_os_family == "FreeBSD"
-  notify: cleanup mysql
 
 - name: install mysql-python package via pip (FreeBSD)
   pip:
     name: mysql-python
     state: present
   when: ansible_os_family == "FreeBSD"
-  notify:
-    - cleanup mysql
-    - remove pip packages
 
 - name: enable mysql-server service (FreeBSD)
   lineinfile:
@@ -87,17 +77,16 @@
 
 - name: apply work-around for OverlayFS issue
   # https://github.com/docker/for-linux/issues/72#issuecomment-319904698
-  command: find {{ mysql_data_dirs[0] }} -type f -exec touch {} ;
+  command: find /var/lib/mysql -type f -exec touch {} ;
   # find will fail if mysql has never been started, as the directory won't exist
   ignore_errors: yes
 
 - name: restart mysql_db service
-  service:
-    name: "{{ mysql_service }}"
-    state: restarted
+  service: name={{ mysql_service }} state=restarted
 
 - name: Detect socket path
-  shell: 'echo "show variables like ''socket''\G" | mysql | grep ''Value: '' | sed ''s/[ ]\+Value: //'''
+  shell: >
+          echo "show variables like 'socket'\G" | mysql | grep 'Value: ' | sed 's/[ ]\+Value: //'
   register: _socket_path
 
 - name: Set socket path

@@ -121,7 +121,7 @@ EXAMPLES = """
         enabled: True
       - name: Ethernet2
         description: 'Configured by Ansible'
-        enabled: False
+        enable: False
     state: merged
 
 # After state:

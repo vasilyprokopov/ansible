@@ -13,29 +13,27 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: dynamodb_ttl
-short_description: Set TTL for a given DynamoDB table
+short_description: set TTL for a given DynamoDB table.
 description:
 - Uses boto3 to set TTL.
-- Requires botocore version 1.5.24 or higher.
+- requires botocore version 1.5.24 or higher.
 version_added: "2.4"
 options:
   state:
     description:
-    - State to set DynamoDB table to.
+    - state to set DynamoDB table to
     choices: ['enable', 'disable']
     required: false
-    type: str
+    default: enable
   table_name:
     description:
-    - Name of the DynamoDB table to work on.
+    - name of the DynamoDB table to work on
     required: true
-    type: str
   attribute_name:
     description:
-    - The name of the Time To Live attribute used to store the expiration time for items in the table.
-    - This appears to be required by the API even when disabling TTL.
+    - the name of the Time to Live attribute used to store the expiration time for items in the table
+    - this appears to be required by the API even when disabling TTL.
     required: true
-    type: str
 
 author: Ted Timmons (@tedder)
 extends_documentation_fragment:
@@ -76,8 +74,9 @@ try:
 except ImportError:
     pass
 
+import ansible.module_utils.ec2
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.ec2 import HAS_BOTO3, boto3_conn, camel_dict_to_snake_dict, ec2_argument_spec, get_aws_connection_info
+from ansible.module_utils.ec2 import ec2_argument_spec, camel_dict_to_snake_dict, HAS_BOTO3
 
 
 def get_current_ttl_state(c, table_name):
@@ -138,8 +137,8 @@ def main():
         module.fail_json(msg='Found botocore in version {0}, but >= {1} is required for TTL support'.format(botocore.__version__, '1.5.24'))
 
     try:
-        region, ec2_url, aws_connect_kwargs = get_aws_connection_info(module, boto3=True)
-        dbclient = boto3_conn(module, conn_type='client', resource='dynamodb', region=region, endpoint=ec2_url, **aws_connect_kwargs)
+        region, ec2_url, aws_connect_kwargs = ansible.module_utils.ec2.get_aws_connection_info(module, boto3=True)
+        dbclient = ansible.module_utils.ec2.boto3_conn(module, conn_type='client', resource='dynamodb', region=region, endpoint=ec2_url, **aws_connect_kwargs)
     except botocore.exceptions.NoCredentialsError as e:
         module.fail_json(msg=str(e))
 

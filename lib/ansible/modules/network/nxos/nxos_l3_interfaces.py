@@ -53,11 +53,6 @@ options:
           - Full name of L3 interface, i.e. Ethernet1/1.
         type: str
         required: true
-      dot1q:
-        description:
-          - Configures IEEE 802.1Q VLAN encapsulation on a subinterface.
-        type: int
-        version_added: 2.10
       ipv4:
         description:
           - IPv4 address and attributes of the L3 interface.
@@ -91,16 +86,6 @@ options:
             description:
               - URIB route tag value for local/direct routes.
             type: int
-      redirects:
-        description:
-          - Enables/disables ip redirects
-        type: bool
-        version_added: 2.10
-      unreachables:
-        description:
-          - Enables/disables ip redirects
-        type: bool
-        version_added: 2.10
 
   state:
     description:
@@ -134,10 +119,6 @@ EXAMPLES = """
         ipv6:
           - address: fd5d:12c9:2201:2::1/64
             tag: 6
-      - name: Ethernet1/7.42
-        dot1q: 42
-        redirects: False
-        unreachables: False
     state: merged
 
 # After state:
@@ -146,12 +127,8 @@ EXAMPLES = """
 # interface Ethernet1/6
 #   ip address 192.168.22.1/24 tag 5
 #   ip address 10.1.1.1/24 secondary tag 10
-# interface Ethernet1/6
+# interfaqce Ethernet1/6
 #   ipv6 address fd5d:12c9:2201:2::1/64 tag 6
-# interface Ethernet1/7.42
-#   encapsulation dot1q 42
-#   no ip redirects
-#   no ip unreachables
 
 
 # Using replaced

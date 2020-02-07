@@ -107,9 +107,9 @@ def main():
         ],
     )
 
-    label = module.params.get('label')
-    label_type = module.params.get('type')
-    state = module.params.get('state')
+    label = module.params['label']
+    label_type = module.params['type']
+    state = module.params['state']
 
     mso = MSOModule(module)
 
@@ -120,7 +120,7 @@ def main():
     if label:
         mso.existing = mso.get_obj(path, displayName=label)
         if mso.existing:
-            label_id = mso.existing.get('id')
+            label_id = mso.existing['id']
             # If we found an existing object, continue with it
             path = 'labels/{id}'.format(id=label_id)
     else:

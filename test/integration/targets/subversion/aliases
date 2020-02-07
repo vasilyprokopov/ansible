@@ -1,5 +1,4 @@
 shippable/posix/group2
-skip/aix
 skip/osx
 destructive
 needs/root

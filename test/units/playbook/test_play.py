@@ -31,6 +31,12 @@ from units.mock.path import mock_unfrackpath_noop
 
 class TestPlay(unittest.TestCase):
 
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
     def test_empty_play(self):
         p = Play.load(dict())
         self.assertEqual(str(p), '')

@@ -126,7 +126,7 @@ from copy import deepcopy
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.network.common.utils import remove_default_spec
 from ansible.module_utils.network.eos.eos import load_config, run_commands
-from ansible.module_utils.network.eos.eos import eos_argument_spec
+from ansible.module_utils.network.eos.eos import eos_argument_spec, check_args
 
 
 def search_obj_in_list(name, lst):
@@ -319,6 +319,7 @@ def main():
                            supports_check_mode=True)
 
     warnings = list()
+    check_args(module, warnings)
 
     result = {'changed': False}
 

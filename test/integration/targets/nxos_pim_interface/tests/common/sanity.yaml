@@ -1,9 +1,12 @@
 ---
 - debug: msg="START connection={{ ansible_connection }} nxos_pim_interface sanity test"
+- debug: msg="Using provider={{ connection.transport }}"
+  when: ansible_connection == "local"
 
 - name: "Setup: Disable features"
   nxos_feature: &disable_feature
     feature: "{{ item }}"
+    provider: "{{ connection }}"
     state: disabled
   loop: ['pim', 'bfd']
   ignore_errors: yes
@@ -11,6 +14,7 @@
 - name: "Setup: Enable features"
   nxos_feature:
     feature: "{{ item }}"
+    provider: "{{ connection }}"
     state: enabled
   loop: ['pim', 'bfd']
 
@@ -20,6 +24,7 @@
   nxos_config:
     lines:
       - "default interface {{ testint }}"
+    provider: "{{ connection }}"
   ignore_errors: yes
 
 - name: "Ensure {{testint}} is layer3"
@@ -28,12 +33,14 @@
     mode: layer3
     description: 'Configured by Ansible - Layer3'
     admin_state: 'up'
+    provider: "{{ connection }}"
     state: present
 
 - block:
   - name: Configure nxos_pim_interface state absent
     nxos_pim_interface: &pimabsent
       interface: "{{ testint }}"
+      provider: "{{ connection }}"
       state: absent
 
   - name: configure jp policy and type
@@ -45,6 +52,7 @@
       jp_type_out: routemap
       sparse: True
       border: True
+      provider: "{{ connection }}"
     register: result
 
   - assert: &true
@@ -64,6 +72,7 @@
       interface: "{{ testint }}"
       neighbor_policy: NPR
       neighbor_type: routemap
+      provider: "{{ connection }}"
     register: result
 
   - assert: *true
@@ -82,6 +91,7 @@
       interface: "{{ testint }}"
       neighbor_policy: NPPF
       neighbor_type: prefix
+      provider: "{{ connection }}"
     register: result
 
   - assert: *true
@@ -96,6 +106,7 @@
     nxos_pim_interface: &confighak1
       interface: "{{ testint }}"
       hello_auth_key: password1
+      provider: "{{ connection }}"
     register: result
 
   - assert: *true
@@ -108,6 +119,7 @@
       sparse: True
       border: True
       bfd: enable
+      provider: "{{ connection }}"
       state: present
     register: result
 
@@ -125,6 +137,7 @@
       sparse: False
       border: False
       bfd: disable
+      provider: "{{ connection }}"
       state: present
     register: result
 
@@ -142,6 +155,7 @@
   - name: configure state default
     nxos_pim_interface: &configdefault
       interface: "{{ testint }}"
+      provider: "{{ connection }}"
       state: default
     register: result
 
@@ -157,6 +171,7 @@
     nxos_pim_interface: &configb
       interface: "{{ testint }}"
       border: True
+      provider: "{{ connection }}"
       state: present
     register: result
 

@@ -151,6 +151,7 @@ EXAMPLES = '''
 # Initiate file copy from the nxos device to transfer file from an SCP server back to the nxos device
   - name: "initiate file copy from device"
     nxos_file_copy:
+      nxos_file_copy:
       file_pull: True
       local_file: "xyz"
       local_file_directory: "dir1/dir2/dir3"
@@ -183,7 +184,7 @@ remote_scp_server:
     type: str
     sample: 'fileserver.example.com'
 changed:
-    description: Indicates whether or not the file was copied.
+    description: Indicates wheather or not the file was copied.
     returned: success
     type: bool
     sample: true

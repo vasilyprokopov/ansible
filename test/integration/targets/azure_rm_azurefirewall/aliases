@@ -1,4 +1,3 @@
 cloud/azure
 shippable/azure/group3
 destructive
-disabled # See: https://github.com/ansible/ansible/issues/62307

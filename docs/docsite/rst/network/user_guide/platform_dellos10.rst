@@ -72,7 +72,3 @@ Example CLI Task
      when: ansible_network_os == 'dellos10'
 
 .. include:: shared_snippets/SSH_warning.txt
-
-.. seealso::
-
-       :ref:`timeout_options`

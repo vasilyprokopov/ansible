@@ -18,7 +18,7 @@
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
-import runpy
+import imp
 import json
 import os
 import subprocess
@@ -28,7 +28,7 @@ from contextlib import contextmanager
 
 from ansible.module_utils.six import reraise
 
-from .utils import CaptureStd, find_executable, get_module_name_from_filename
+from .utils import CaptureStd, find_executable
 
 
 class AnsibleModuleCallError(RuntimeError):
@@ -36,10 +36,6 @@ class AnsibleModuleCallError(RuntimeError):
 
 
 class AnsibleModuleImportError(ImportError):
-    pass
-
-
-class AnsibleModuleNotInitialized(Exception):
     pass
 
 
@@ -108,21 +104,32 @@ def get_ps_argument_spec(filename):
     return kwargs['argument_spec'], (), kwargs
 
 
-def get_py_argument_spec(filename, collection):
-    name = get_module_name_from_filename(filename, collection)
+def get_py_argument_spec(filename):
+    # Calculate the module's name so that relative imports work correctly
+    name = None
+    try:
+        idx = filename.index('ansible/modules')
+    except ValueError:
+        try:
+            idx = filename.index('ansible_collections/')
+        except ValueError:
+            # We default to ``module`` here instead of ``__main__``
+            # which helps with some import issues in this tool
+            # where modules may import things that conflict
+            name = 'module'
+    if name is None:
+        name = filename[idx:-len('.py')].replace('/', '.')
 
     with setup_env(filename) as fake:
         try:
             with CaptureStd():
-                runpy.run_module(name, run_name='__main__', alter_sys=True)
+                mod = imp.load_source(name, filename)
+                if not fake.called:
+                    mod.main()
         except AnsibleModuleCallError:
             pass
-        except BaseException as e:
-            # we want to catch all exceptions here, including sys.exit
+        except Exception as e:
             reraise(AnsibleModuleImportError, AnsibleModuleImportError('%s' % e), sys.exc_info()[2])
-
-        if not fake.called:
-            raise AnsibleModuleNotInitialized()
 
     try:
         try:
@@ -134,8 +141,8 @@ def get_py_argument_spec(filename, collection):
         return {}, (), {}
 
 
-def get_argument_spec(filename, collection):
+def get_argument_spec(filename):
     if filename.endswith('.py'):
-        return get_py_argument_spec(filename, collection)
+        return get_py_argument_spec(filename)
     else:
         return get_ps_argument_spec(filename)

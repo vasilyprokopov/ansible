@@ -73,7 +73,7 @@ vultr_server_facts:
   description: Response from Vultr API
   returned: success
   type: complex
-  sample:
+  contains:
     "vultr_server_facts": [
       {
         "allowed_bandwidth_gb": 1000,

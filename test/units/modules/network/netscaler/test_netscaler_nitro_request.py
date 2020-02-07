@@ -56,8 +56,14 @@ class TestNetscalerNitroRequestModule(TestModule):
 
         cls.MockException = MockException
 
-    # This has code in a parent class
+    @classmethod
+    def tearDownClass(cls):
+        pass
+
     def setUp(self):
+        pass
+
+    def tearDown(self):
         pass
 
     def test_fail_on_conflicting_authentication_methods(self):

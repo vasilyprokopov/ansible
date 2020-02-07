@@ -25,18 +25,16 @@ options:
     group:
         description:
             - This the name of the firmware group
-        type: str
         required: true
     firmwarepol:
         description:
             - This is the name of the firmware policy, which was create by aci_firmware_policy. It is important that
             - you use the same name as the policy created with aci_firmware_policy
-        type: str
+        required: false
     state:
         description:
             - Use C(present) or C(absent) for adding or removing.
             - Use C(query) for listing an object or multiple objects.
-        type: str
         default: present
         choices: [ absent, present, query ]
 
@@ -184,9 +182,9 @@ def main():
         ],
     )
 
-    state = module.params.get('state')
-    group = module.params.get('group')
-    firmwarepol = module.params.get('firmwarepol')
+    state = module.params['state']
+    group = module.params['group']
+    firmwarepol = module.params['firmwarepol']
 
     aci = ACIModule(module)
     aci.construct_url(

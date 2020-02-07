@@ -21,8 +21,8 @@ version_added: '2.10'
 description:
     - This module allows you to search for Zabbix user entries.
 requirements:
-    - "python >= 2.6"
-    - "zabbix-api >= 0.5.4"
+    - python >= 2.6
+    - zabbix-api
 options:
     alias:
         description:
@@ -89,7 +89,6 @@ zabbix_user:
   }
 '''
 
-import atexit
 import traceback
 
 try:
@@ -161,7 +160,6 @@ def main():
         zbx = ZabbixAPI(server_url, timeout=timeout, user=http_login_user, passwd=http_login_password,
                         validate_certs=validate_certs)
         zbx.login(login_user, login_password)
-        atexit.register(zbx.logout)
     except Exception as e:
         module.fail_json(msg="Failed to connect to Zabbix server: %s" % e)
 

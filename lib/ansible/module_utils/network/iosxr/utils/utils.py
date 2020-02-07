@@ -9,7 +9,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 from ansible.module_utils.six import iteritems
-from ansible.module_utils.network.common.utils import dict_diff, is_masklen, to_netmask, search_obj_in_list
+from ansible.module_utils.network.common.utils import is_masklen, to_netmask
 
 
 def remove_command_from_config_list(interface, cmd, commands):
@@ -178,13 +178,12 @@ def diff_list_of_dicts(w, h):
         h = []
 
     diff = []
-    for w_item in w:
-        h_item = search_obj_in_list(w_item['member'], h, key='member') or {}
-        d = dict_diff(h_item, w_item)
-        if d:
-            if 'member' not in d.keys():
-                d['member'] = w_item['member']
-            diff.append(d)
+    set_w = set(tuple(d.items()) for d in w)
+    set_h = set(tuple(d.items()) for d in h)
+    difference = set_w.difference(set_h)
+
+    for element in difference:
+        diff.append(dict((x, y) for x, y in element))
 
     return diff
 

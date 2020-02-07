@@ -2,9 +2,6 @@
 # Copyright (c) 2017 Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
-
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'community'}
@@ -23,13 +20,11 @@ options:
     description:
       - The VPC ID for the VPC that this Egress Only Internet Gateway should be attached.
     required: true
-    type: str
   state:
     description:
-      - Create or delete the EIGW.
+      - Create or delete the EIGW
     default: present
     choices: [ 'present', 'absent' ]
-    type: str
 extends_documentation_fragment:
     - aws
     - ec2
@@ -62,12 +57,17 @@ vpc_id:
 
 
 from ansible.module_utils.aws.core import AnsibleAWSModule
-from ansible.module_utils.ec2 import camel_dict_to_snake_dict
+from ansible.module_utils.ec2 import (
+    boto3_conn,
+    ec2_argument_spec,
+    get_aws_connection_info,
+    camel_dict_to_snake_dict
+)
 
 try:
     import botocore
 except ImportError:
-    pass  # caught by AnsibleAWSModule
+    pass  # will be picked up by HAS_BOTO3 in AnsibleAWSModule
 
 
 def delete_eigw(module, conn, eigw_id):
@@ -162,14 +162,16 @@ def describe_eigws(module, conn, vpc_id):
 
 
 def main():
-    argument_spec = dict(
+    argument_spec = ec2_argument_spec()
+    argument_spec.update(dict(
         vpc_id=dict(required=True),
         state=dict(default='present', choices=['present', 'absent'])
-    )
+    ))
 
     module = AnsibleAWSModule(argument_spec=argument_spec, supports_check_mode=True)
 
-    connection = module.client('ec2')
+    region, ec2_url, aws_connect_params = get_aws_connection_info(module, boto3=True)
+    connection = boto3_conn(module, conn_type='client', resource='ec2', region=region, endpoint=ec2_url, **aws_connect_params)
 
     vpc_id = module.params.get('vpc_id')
     state = module.params.get('state')

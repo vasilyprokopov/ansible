@@ -34,9 +34,6 @@ notes:
     - C(mask) must be inserted in decimal format (i.e. 24) for
       both IPv6 and IPv4.
     - A single interface can have multiple IPv6 configured.
-    - This module requires the netconf system service be enabled on the remote device being managed.
-    - Recommended connection is C(netconf).
-    - This module also works with C(local) connections for legacy playbooks.
 options:
     interface:
         description:
@@ -303,44 +300,48 @@ def get_interface_type(interface):
     if interface is None:
         return None
 
+    iftype = None
+
     if interface.upper().startswith('GE'):
-        return 'ge'
+        iftype = 'ge'
     elif interface.upper().startswith('10GE'):
-        return '10ge'
+        iftype = '10ge'
     elif interface.upper().startswith('25GE'):
-        return '25ge'
+        iftype = '25ge'
     elif interface.upper().startswith('4X10GE'):
-        return '4x10ge'
+        iftype = '4x10ge'
     elif interface.upper().startswith('40GE'):
-        return '40ge'
+        iftype = '40ge'
     elif interface.upper().startswith('100GE'):
-        return '100ge'
+        iftype = '100ge'
     elif interface.upper().startswith('VLANIF'):
-        return 'vlanif'
+        iftype = 'vlanif'
     elif interface.upper().startswith('LOOPBACK'):
-        return 'loopback'
+        iftype = 'loopback'
     elif interface.upper().startswith('METH'):
-        return 'meth'
+        iftype = 'meth'
     elif interface.upper().startswith('ETH-TRUNK'):
-        return 'eth-trunk'
+        iftype = 'eth-trunk'
     elif interface.upper().startswith('VBDIF'):
-        return 'vbdif'
+        iftype = 'vbdif'
     elif interface.upper().startswith('NVE'):
-        return 'nve'
+        iftype = 'nve'
     elif interface.upper().startswith('TUNNEL'):
-        return 'tunnel'
+        iftype = 'tunnel'
     elif interface.upper().startswith('ETHERNET'):
-        return 'ethernet'
+        iftype = 'ethernet'
     elif interface.upper().startswith('FCOE-PORT'):
-        return 'fcoe-port'
+        iftype = 'fcoe-port'
     elif interface.upper().startswith('FABRIC-PORT'):
-        return 'fabric-port'
+        iftype = 'fabric-port'
     elif interface.upper().startswith('STACK-PORT'):
-        return 'stack-port'
+        iftype = 'stack-port'
     elif interface.upper().startswith('NULL'):
-        return 'null'
+        iftype = 'null'
     else:
         return None
+
+    return iftype.lower()
 
 
 def is_valid_v4addr(addr):

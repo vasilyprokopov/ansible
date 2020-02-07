@@ -43,13 +43,11 @@ class ActionModule(ActionNetworkModule):
     def run(self, tmp=None, task_vars=None):
         del tmp  # tmp no longer has any effect
 
-        module_name = self._task.action.split('.')[-1]
-        self._config_module = True if module_name == 'bigip_imish_config' else False
-        persistent_connection = self._play_context.connection.split('.')[-1]
+        self._config_module = True if self._task.action == 'bigip_imish_config' else False
         socket_path = None
         transport = 'rest'
 
-        if persistent_connection == 'network_cli':
+        if self._play_context.connection == 'network_cli':
             provider = self._task.args.get('provider', {})
             if any(provider.values()):
                 display.warning("'provider' is unnecessary when using 'network_cli' and will be ignored")
@@ -71,7 +69,7 @@ class ActionModule(ActionNetworkModule):
                 command_timeout = int(provider['timeout'] or C.PERSISTENT_COMMAND_TIMEOUT)
 
                 display.vvv('using connection plugin %s' % pc.connection, pc.remote_addr)
-                connection = self._shared_loader_obj.connection_loader.get('persistent', pc, sys.stdin, task_uuid=self._task._uuid)
+                connection = self._shared_loader_obj.connection_loader.get('persistent', pc, sys.stdin)
                 connection.set_options(direct={'persistent_command_timeout': command_timeout})
 
                 socket_path = connection.run()
@@ -85,7 +83,7 @@ class ActionModule(ActionNetworkModule):
 
                 task_vars['ansible_socket'] = socket_path
 
-        if (self._play_context.connection == 'local' and transport == 'cli') or persistent_connection == 'network_cli':
+        if (self._play_context.connection == 'local' and transport == 'cli') or self._play_context.connection == 'network_cli':
             # make sure we are in the right cli context which should be
             # enable mode and not config module
             if socket_path is None:

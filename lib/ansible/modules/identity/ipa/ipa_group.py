@@ -10,7 +10,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'community'}
 
-DOCUMENTATION = r'''
+DOCUMENTATION = '''
 ---
 module: ipa_group
 author: Thomas Krahn (@Nosmoht)
@@ -24,11 +24,9 @@ options:
     - Can not be changed as it is the unique identifier.
     required: true
     aliases: ['name']
-    type: str
   description:
     description:
     - Description of the group.
-    type: str
   external:
     description:
     - Allow adding external non-IPA members from trusted domains.
@@ -37,15 +35,12 @@ options:
     description:
     - GID (use this option to set it manually).
     aliases: ['gid']
-    type: str
   group:
     description:
     - List of group names assigned to this group.
     - If an empty list is passed all groups will be removed from this group.
     - If option is omitted assigned groups will not be checked or changed.
     - Groups that are already assigned but not passed will be removed.
-    type: list
-    elements: str
   nonposix:
     description:
     - Create as a non-POSIX group.
@@ -56,21 +51,18 @@ options:
     - If an empty list is passed all users will be removed from this group.
     - If option is omitted assigned users will not be checked or changed.
     - Users that are already assigned but not passed will be removed.
-    type: list
-    elements: str
   state:
     description:
     - State to ensure
     default: "present"
-    choices: ["absent", "present"]
-    type: str
+    choices: ["present", "absent"]
 extends_documentation_fragment: ipa.documentation
 version_added: "2.3"
 '''
 
-EXAMPLES = r'''
-- name: Ensure group is present
-  ipa_group:
+EXAMPLES = '''
+# Ensure group is present
+- ipa_group:
     name: oinstall
     gidnumber: 54321
     state: present
@@ -78,8 +70,8 @@ EXAMPLES = r'''
     ipa_user: admin
     ipa_pass: topsecret
 
-- name: Ensure that groups sysops and appops are assigned to ops but no other group
-  ipa_group:
+# Ensure that groups sysops and appops are assigned to ops but no other group
+- ipa_group:
     name: ops
     group:
     - sysops
@@ -88,8 +80,8 @@ EXAMPLES = r'''
     ipa_user: admin
     ipa_pass: topsecret
 
-- name: Ensure that users linus and larry are assign to the group, but no other user
-  ipa_group:
+# Ensure that users linus and larry are assign to the group, but no other user
+- ipa_group:
     name: sysops
     user:
     - linus
@@ -98,8 +90,8 @@ EXAMPLES = r'''
     ipa_user: admin
     ipa_pass: topsecret
 
-- name: Ensure group is absent
-  ipa_group:
+# Ensure group is absent
+- ipa_group:
     name: sysops
     state: absent
     ipa_host: ipa.example.com
@@ -107,7 +99,7 @@ EXAMPLES = r'''
     ipa_pass: topsecret
 '''
 
-RETURN = r'''
+RETURN = '''
 group:
   description: Group as returned by IPA API
   returned: always
@@ -236,10 +228,10 @@ def main():
                          description=dict(type='str'),
                          external=dict(type='bool'),
                          gidnumber=dict(type='str', aliases=['gid']),
-                         group=dict(type='list', elements='str'),
+                         group=dict(type='list'),
                          nonposix=dict(type='bool'),
                          state=dict(type='str', default='present', choices=['present', 'absent']),
-                         user=dict(type='list', elements='str'))
+                         user=dict(type='list'))
 
     module = AnsibleModule(argument_spec=argument_spec,
                            supports_check_mode=True,

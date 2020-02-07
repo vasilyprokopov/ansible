@@ -36,17 +36,11 @@ def get_file_content(path, default=None, strip=True):
     return data
 
 
-def get_file_lines(path, strip=True, line_sep=None):
+def get_file_lines(path, strip=True):
     '''get list of lines from file'''
     data = get_file_content(path, strip=strip)
     if data:
-        if line_sep is None:
-            ret = data.splitlines()
-        else:
-            if len(line_sep) == 1:
-                ret = data.rstrip(line_sep).split(line_sep)
-            else:
-                ret = data.split(line_sep)
+        ret = data.splitlines()
     else:
         ret = []
     return ret

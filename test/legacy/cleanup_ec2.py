@@ -4,9 +4,6 @@ Find and delete AWS resources matching the provided --match string.  Unless
 Please use caution, you can easily delete you're *ENTIRE* EC2 infrastructure.
 '''
 
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
-
 import boto
 import boto.ec2.elb
 import optparse
@@ -63,8 +60,7 @@ def delete_aws_eips(get_func, attr, opts):
 
     # the file might not be there if the integration test wasn't run
     try:
-        with open(opts.eip_log, 'r') as f:
-            eip_log = f.read().splitlines()
+        eip_log = open(opts.eip_log, 'r').read().splitlines()
     except IOError:
         print('%s not found.' % opts.eip_log)
         return

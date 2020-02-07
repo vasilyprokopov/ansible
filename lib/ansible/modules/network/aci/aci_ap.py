@@ -226,10 +226,10 @@ def main():
         ],
     )
 
-    ap = module.params.get('ap')
-    description = module.params.get('description')
-    state = module.params.get('state')
-    tenant = module.params.get('tenant')
+    ap = module.params['ap']
+    description = module.params['description']
+    state = module.params['state']
+    tenant = module.params['tenant']
 
     aci = ACIModule(module)
     aci.construct_url(

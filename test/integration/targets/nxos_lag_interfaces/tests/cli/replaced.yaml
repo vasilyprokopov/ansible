@@ -10,15 +10,18 @@
     feature: lacp
 
 - name: setup1
-  nxos_config:
+  nxos_config: &cleanup1
     lines:
-      - no interface port-channel 10
-      - no interface port-channel 11
+      - "no channel-group 10"
+    parents: "interface {{ test_int1 }}"
   ignore_errors: yes
 
 - name: setup2
-  nxos_lag_interfaces: &remove_lags
-    state: deleted
+  nxos_config: &cleanup2
+    lines:
+      - "no channel-group 11"
+    parents: "interface {{ test_int2 }}"
+  ignore_errors: yes
 
 - block:
   - name: setup3
@@ -69,7 +72,11 @@
 
   always:
   - name: teardown1
-    nxos_lag_interfaces: *remove_lags
+    nxos_config: *cleanup1
+    ignore_errors: yes
+
+  - name: teardown2
+    nxos_config: *cleanup2
     ignore_errors: yes
 
   - name: disable feature lacp

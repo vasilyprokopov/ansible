@@ -130,13 +130,11 @@ openstack_subnets:
         dns_nameservers:
             description: DNS name servers for this subnet.
             returned: success
-            type: list
-            elements: str
+            type: list of strings
         allocation_pools:
             description: Allocation pools associated with this subnet.
             returned: success
-            type: list
-            elements: dict
+            type: list of dicts
 '''
 
 from ansible.module_utils.basic import AnsibleModule

@@ -1,5 +1,7 @@
 ---
 - debug: msg="START connection={{ ansible_connection }} nxos_logging basic test"
+- debug: msg="Using provider={{ connection.transport }}"
+  when: ansible_connection == "local"
 
 # This task is needed to clear out any previous logfile
 # size settings.
@@ -7,16 +9,19 @@
   nxos_config:
     lines:
       - logging logfile test 1 size 4194304
+    provider: "{{ connection }}"
   ignore_errors: yes
 
 - name: Purge logging configuration first
   nxos_logging:
     purge: true
+    provider: "{{ connection }}"
 
 - name: Set up console logging
   nxos_logging: &clog
     dest: console
     dest_level: 0
+    provider: "{{ connection }}"
     state: present
   register: result
 
@@ -37,6 +42,7 @@
   nxos_logging: &clog2
     dest: console
     dest_level: 2
+    provider: "{{ connection }}"
     state: present
   register: result
 
@@ -56,11 +62,13 @@
     lines:
       - speed 19200
     parents: line console
+    provider: "{{ connection }}"
 
 - name: Enable console logging with level 3 (will fail)
   nxos_logging: &con3
     dest: console
     dest_level: 3
+    provider: "{{ connection }}"
   register: result
   ignore_errors: yes
 
@@ -73,6 +81,7 @@
     lines:
       - speed 38400
     parents: line console
+    provider: "{{ connection }}"
 
 - name: Enable console logging with level 3 (will pass)
   nxos_logging: *con3
@@ -89,6 +98,7 @@
       dest: logfile
       name: test
       dest_level: 1
+      provider: "{{ connection }}"
       state: present
     register: result
 
@@ -110,6 +120,7 @@
   nxos_logging: &molog
     dest: module
     dest_level: 2
+    provider: "{{ connection }}"
   register: result
 
 - assert:
@@ -127,6 +138,7 @@
   nxos_logging: &mlog
     dest: monitor
     dest_level: 3
+    provider: "{{ connection }}"
   register: result
 
 - assert:
@@ -144,6 +156,7 @@
   nxos_logging: &mlog5
     dest: monitor
     dest_level: 5
+    provider: "{{ connection }}"
   register: result
 
 - assert:
@@ -161,6 +174,7 @@
   nxos_logging: &flog
     facility: daemon
     facility_level: 4
+    provider: "{{ connection }}"
   register: result
 
 - assert:
@@ -182,6 +196,7 @@
     facility_level: 1
     use_vrf: management
     state: present
+    provider: "{{ connection }}"
   register: result
 
 - assert:
@@ -223,6 +238,7 @@
       - { facility: daemon, facility_level: 4 }
       - { dest: server, remote_server: test-syslogserver.com, facility: auth, facility_level: 1, use_vrf: management }
       - { interface: mgmt0 }
+    provider: "{{ connection }}"
     state: absent
   register: result
 
@@ -258,6 +274,7 @@
     nxos_logging: &logm
       interface_message: add-interface-description
       state: present
+      provider: "{{ connection }}"
     register: result
 
   - assert: &true
@@ -274,6 +291,7 @@
     nxos_logging:
       interface_message: add-interface-description
       state: absent
+      provider: "{{ connection }}"
     register: result
 
   - assert: *true
@@ -286,6 +304,7 @@
     name: test
     dest_level: 1
     file_size: 16384
+    provider: "{{ connection }}"
     state: present
   register: result
 
@@ -306,6 +325,7 @@
     name: test
     dest_level: 1
     file_size: 16384
+    provider: "{{ connection }}"
     state: absent
   register: result
 
@@ -433,6 +453,7 @@
 - name: Set up Logging Timestamp
   nxos_logging: &ltms
     timestamp: microseconds
+    provider: "{{ connection }}"
     state: present
   register: result
 
@@ -457,6 +478,7 @@
   nxos_logging: &felue
     facility: ethpm
     facility_link_status: link-up-error
+    provider: "{{ connection }}"
     state: present
   register: result
 
@@ -482,6 +504,7 @@
   nxos_logging: &felde
     facility: ethpm
     facility_link_status: link-down-error
+    provider: "{{ connection }}"
     state: present
   register: result
 

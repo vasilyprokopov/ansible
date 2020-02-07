@@ -89,17 +89,6 @@
           "Resource": "*"
         },
         {
-            "Sid": "AllowRDSSubnetGroups",
-            "Effect": "Allow",
-            "Action": [
-                "rds:CreateDBSubnetGroup",
-                "rds:DeleteDBSubnetGroup",
-                "rds:DescribeDBSubnetGroups",
-                "rds:ModifyDBSubnetGroup"
-            ],
-            "Resource": ["*"]
-        },
-        {
           "Sid": "DMSEndpoints",
           "Effect": "Allow",
           "Action": [

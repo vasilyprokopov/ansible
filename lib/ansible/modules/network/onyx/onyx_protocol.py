@@ -59,10 +59,6 @@ options:
     description: nve protocol
     choices: ['enabled', 'disabled']
     version_added: "2.9"
-  bfd:
-    description: bfd protocol
-    choices: ['enabled', 'disabled']
-    version_added: "2.10"
 """
 
 EXAMPLES = """
@@ -117,8 +113,6 @@ class OnyxProtocolModule(BaseOnyxModule):
                   disable="no protocol ospf"),
         nve=dict(name="nve", enable="protocol nve",
                  disable="no protocol nve"),
-        bfd=dict(name="bfd", enable="protocol bfd",
-                 disable="no protocol bfd"),
     )
 
     @classmethod

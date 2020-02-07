@@ -35,6 +35,9 @@ class TestErrors(unittest.TestCase):
 
         self.obj = AnsibleBaseYAMLObject()
 
+    def tearDown(self):
+        pass
+
     def test_basic_error(self):
         e = AnsibleError(self.message)
         self.assertEqual(e.message, self.message)

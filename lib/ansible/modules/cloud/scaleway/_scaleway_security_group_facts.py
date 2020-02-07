@@ -51,7 +51,7 @@ scaleway_security_group_facts:
   description: Response from Scaleway API
   returned: success
   type: complex
-  sample:
+  contains:
     "scaleway_security_group_facts": [
         {
             "description": "test-ams",

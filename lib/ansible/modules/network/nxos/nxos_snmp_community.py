@@ -74,7 +74,7 @@ commands:
 
 import re
 from ansible.module_utils.network.nxos.nxos import load_config, run_commands
-from ansible.module_utils.network.nxos.nxos import nxos_argument_spec
+from ansible.module_utils.network.nxos.nxos import nxos_argument_spec, check_args
 from ansible.module_utils.basic import AnsibleModule
 
 
@@ -153,13 +153,10 @@ def config_snmp_community(delta, community):
         'no_acl': 'no snmp-server community {0} use-acl {no_acl}'
     }
     commands = []
-    for k in delta.keys():
+    for k, v in delta.items():
         cmd = CMDS.get(k).format(community, **delta)
         if cmd:
-            if 'group' in cmd:
-                commands.insert(0, cmd)
-            else:
-                commands.append(cmd)
+            commands.append(cmd)
             cmd = None
     return commands
 
@@ -181,6 +178,7 @@ def main():
                            supports_check_mode=True)
 
     warnings = list()
+    check_args(module, warnings)
     results = {'changed': False, 'commands': [], 'warnings': warnings}
 
     access = module.params['access']
@@ -222,7 +220,6 @@ def main():
             commands.append(command)
 
     cmds = flatten_list(commands)
-
     if cmds:
         results['changed'] = True
         if not module.check_mode:

@@ -1,9 +1,7 @@
 #!/usr/bin/python
+
 # Copyright: (c) 2018, Rob White (@wimnat)
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
 
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
@@ -24,60 +22,55 @@ options:
       - The number of AWS Glue data processing units (DPUs) to allocate to this Job. From 2 to 100 DPUs
         can be allocated; the default is 10. A DPU is a relative measure of processing power that consists
         of 4 vCPUs of compute capacity and 16 GB of memory.
-    type: int
+    required: false
   command_name:
     description:
       - The name of the job command. This must be 'glueetl'.
+    required: false
     default: glueetl
-    type: str
   command_script_location:
     description:
       - The S3 path to a script that executes a job.
-      - Required when I(state=present).
-    type: str
+    required: true
   connections:
     description:
       - A list of Glue connections used for this job.
-    type: list
-    elements: str
+    required: false
   default_arguments:
     description:
       - A dict of default arguments for this job.  You can specify arguments here that your own job-execution
         script consumes, as well as arguments that AWS Glue itself consumes.
-    type: dict
+    required: false
   description:
     description:
       - Description of the job being defined.
-    type: str
+    required: false
   max_concurrent_runs:
     description:
       - The maximum number of concurrent runs allowed for the job. The default is 1. An error is returned when
         this threshold is reached. The maximum value you can specify is controlled by a service limit.
-    type: int
+    required: false
   max_retries:
     description:
       -  The maximum number of times to retry this job if it fails.
-    type: int
+    required: false
   name:
     description:
       - The name you assign to this job definition. It must be unique in your account.
     required: true
-    type: str
   role:
     description:
       - The name or ARN of the IAM role associated with this job.
-      - Required when I(state=present).
-    type: str
+    required: true
   state:
     description:
       - Create or delete the AWS Glue job.
     required: true
     choices: [ 'present', 'absent' ]
-    type: str
   timeout:
     description:
       - The job timeout in minutes.
-    type: int
+    required: false
 extends_documentation_fragment:
     - aws
     - ec2

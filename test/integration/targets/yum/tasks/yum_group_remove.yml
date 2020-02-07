@@ -1,21 +1,19 @@
 - name: install a group to test and yum-utils
   yum:
-    name: "{{ pkgs }}"
+    name: "{{ item }}"
     state: present
-  vars:
-    pkgs:
-      - "@Custom Group"
-      - yum-utils
+  with_items:
+    - "@Custom Group"
+    - yum-utils
   when: ansible_pkg_mgr == "yum"
 
 - name: install a group to test and dnf-utils
   yum:
-    name: "{{ pkgs }}"
+    name: "{{ item }}"
     state: present
-  vars:
-    pkgs:
-      - "@Custom Group"
-      - dnf-utils
+  with_items:
+    - "@Custom Group"
+    - dnf-utils
   when: ansible_pkg_mgr == "dnf"
 
 - name: check mode remove the group

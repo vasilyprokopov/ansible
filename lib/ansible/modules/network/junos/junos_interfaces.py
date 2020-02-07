@@ -60,11 +60,11 @@ options:
           full duplex or in automatic state which negotiates the duplex automatically.
         type: str
         choices: ['automatic', 'full-duplex', 'half-duplex']
-      enabled:
+      enable:
         default: True
         description:
         - Administrative state of the interface.
-        - Set the value to C(true) to administratively enabled the interface or C(false) to disable it.
+        - Set the value to C(true) to administratively enable the interface or C(false) to disable it.
         type: bool
       hold_time:
         description:
@@ -161,11 +161,11 @@ EXAMPLES = """
     config:
       - name: ge-0/0/1
         description: 'Configured by Ansible-1'
-        enabled: True
+        enable: True
         mtu: 1800
       - name: ge-0/0/2
         description: 'Configured by Ansible-2'
-        enabled: False
+        enable: False
     state: merged
 
 # After state:
@@ -182,7 +182,7 @@ EXAMPLES = """
 # }
 
 
-# Using overridden
+# Using overriden
 
 # Before state:
 # -------------
@@ -208,11 +208,11 @@ EXAMPLES = """
     config:
       - name: ge-0/0/2
         description: 'Configured by Ansible-2'
-        enabled: False
+        enable: False
         mtu: 2800
       - name: ge-0/0/3
         description: 'Configured by Ansible-3'
-    state: overridden
+    state: overriden
 
 # After state:
 # ------------
@@ -255,7 +255,7 @@ EXAMPLES = """
     config:
       - name: ge-0/0/2
         description: 'Configured by Ansible-2'
-        enabled: False
+        enable: False
         mtu: 2800
       - name: ge-0/0/3
         description: 'Configured by Ansible-3'

@@ -52,13 +52,10 @@ notes:
     - Outbound rate(byte/sec) shows the rate at which an interface sends bytes within an interval.
     - Outbound rate(pkts/sec) shows the rate at which an interface sends packets within an interval.
     - Speed shows the rate for an Ethernet interface.
-    - This module requires the netconf system service be enabled on the remote device being managed.
-    - Recommended connection is C(netconf).
-    - This module also works with C(local) connections for legacy playbooks.
 options:
     interface:
         description:
-            - For the interface parameter, you can enter C(all) to display information about all interfaces,
+            - For the interface parameter, you can enter C(all) to display information about all interface,
               an interface type such as C(40GE) to display information about interfaces of the specified type,
               or full name of an interface such as C(40GE1/0/22) or C(vlanif10)
               to display information about the specific interface.
@@ -91,7 +88,7 @@ EXAMPLES = '''
       interface: 40GE
       provider: "{{ cli }}"
 
-  - name: Get all interfaces link status information
+  - name: Get all interface link status information
     ce_link_status:
       interface: all
       provider: "{{ cli }}"
@@ -131,7 +128,7 @@ result:
 
 from xml.etree import ElementTree
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.network.cloudengine.ce import ce_argument_spec, get_nc_config, get_nc_next
+from ansible.module_utils.network.cloudengine.ce import ce_argument_spec, get_nc_config
 
 CE_NC_GET_PORT_SPEED = """
 <filter type="subtree">
@@ -197,44 +194,48 @@ def get_interface_type(interface):
     if interface is None:
         return None
 
+    iftype = None
+
     if interface.upper().startswith('GE'):
-        return 'ge'
+        iftype = 'ge'
     elif interface.upper().startswith('10GE'):
-        return '10ge'
+        iftype = '10ge'
     elif interface.upper().startswith('25GE'):
-        return '25ge'
+        iftype = '25ge'
     elif interface.upper().startswith('4X10GE'):
-        return '4x10ge'
+        iftype = '4x10ge'
     elif interface.upper().startswith('40GE'):
-        return '40ge'
+        iftype = '40ge'
     elif interface.upper().startswith('100GE'):
-        return '100ge'
+        iftype = '100ge'
     elif interface.upper().startswith('VLANIF'):
-        return 'vlanif'
+        iftype = 'vlanif'
     elif interface.upper().startswith('LOOPBACK'):
-        return 'loopback'
+        iftype = 'loopback'
     elif interface.upper().startswith('METH'):
-        return 'meth'
+        iftype = 'meth'
     elif interface.upper().startswith('ETH-TRUNK'):
-        return 'eth-trunk'
+        iftype = 'eth-trunk'
     elif interface.upper().startswith('VBDIF'):
-        return 'vbdif'
+        iftype = 'vbdif'
     elif interface.upper().startswith('NVE'):
-        return 'nve'
+        iftype = 'nve'
     elif interface.upper().startswith('TUNNEL'):
-        return 'tunnel'
+        iftype = 'tunnel'
     elif interface.upper().startswith('ETHERNET'):
-        return 'ethernet'
+        iftype = 'ethernet'
     elif interface.upper().startswith('FCOE-PORT'):
-        return 'fcoe-port'
+        iftype = 'fcoe-port'
     elif interface.upper().startswith('FABRIC-PORT'):
-        return 'fabric-port'
+        iftype = 'fabric-port'
     elif interface.upper().startswith('STACK-PORT'):
-        return 'stack-Port'
+        iftype = 'stack-Port'
     elif interface.upper().startswith('NULL'):
-        return 'null'
+        iftype = 'null'
     else:
         return None
+
+    return iftype.lower()
 
 
 def is_ethernet_port(interface):
@@ -392,10 +393,10 @@ class LinkStatus(object):
                             'Outbound rate(pkts/sec)'] = eles.text
 
     def get_all_interface_info(self, intf_type=None):
-        """Get interface information by all or by interface type"""
+        """Get interface information all or by interface type"""
 
         xml_str = CE_NC_GET_INT_STATISTICS % ''
-        con_obj = get_nc_next(self.module, xml_str)
+        con_obj = get_nc_config(self.module, xml_str)
         if "<data/>" in con_obj:
             return
 
@@ -405,7 +406,7 @@ class LinkStatus(object):
 
         # get link status information
         root = ElementTree.fromstring(xml_str)
-        intfs_info = root.findall("ifm/interfaces/interface")
+        intfs_info = root.find("ifm/interfaces")
         if not intfs_info:
             return
 

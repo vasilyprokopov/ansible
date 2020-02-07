@@ -11,7 +11,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'supported_by': 'community'}
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = '''
 ---
 module: ipa_sudocmdgroup
 author: Thomas Krahn (@Nosmoht)
@@ -24,28 +24,23 @@ options:
     - Sudo Command Group.
     aliases: ['name']
     required: true
-    type: str
   description:
     description:
     - Group description.
-    type: str
   state:
-    description: State to ensure.
+    description: State to ensure
     default: present
-    choices: ['absent', 'disabled', 'enabled', 'present']
-    type: str
+    choices: ['present', 'absent', 'enabled', 'disabled']
   sudocmd:
     description:
     - List of sudo commands to assign to the group.
     - If an empty list is passed all assigned commands will be removed from the group.
     - If option is omitted sudo commands will not be checked or changed.
-    type: list
-    elements: str
 extends_documentation_fragment: ipa.documentation
 version_added: "2.3"
 '''
 
-EXAMPLES = r'''
+EXAMPLES = '''
 - name: Ensure sudo command group exists
   ipa_sudocmdgroup:
     name: group01
@@ -65,7 +60,7 @@ EXAMPLES = r'''
     ipa_pass: topsecret
 '''
 
-RETURN = r'''
+RETURN = '''
 sudocmdgroup:
   description: Sudo command group as returned by IPA API
   returned: always
@@ -161,7 +156,7 @@ def main():
     argument_spec.update(cn=dict(type='str', required=True, aliases=['name']),
                          description=dict(type='str'),
                          state=dict(type='str', default='present', choices=['present', 'absent', 'enabled', 'disabled']),
-                         sudocmd=dict(type='list', elements='str'))
+                         sudocmd=dict(type='list'))
 
     module = AnsibleModule(argument_spec=argument_spec,
                            supports_check_mode=True)

@@ -20,6 +20,8 @@ __metaclass__ = type
 import os
 import sys
 
+import pytest
+
 from units.compat import unittest
 from ansible.plugins.filter.network import parse_xml, type5_pw, hash_salt, comp_type5, vlan_parser
 
@@ -139,7 +141,7 @@ class TestHashSalt(unittest.TestCase):
     def test_unparseable_salt(self):
         password = '$nTc1$Z28sUTcWfXlvVe2x.3XAa.'
         with self.assertRaises(Exception) as e:
-            hash_salt(password)
+            parsed = hash_salt(password)
         self.assertEqual("Could not parse salt out password correctly from $nTc1$Z28sUTcWfXlvVe2x.3XAa.", str(e.exception))
 
 

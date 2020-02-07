@@ -29,10 +29,6 @@ description:
     - Manages SNMP community configuration on HUAWEI CloudEngine switches.
 author:
     - wangdezhuang (@QijunPan)
-notes:
-    - This module requires the netconf system service be enabled on the remote device being managed.
-    - Recommended connection is C(netconf).
-    - This module also works with C(local) connections for legacy playbooks.
 options:
     acl_number:
         description:
@@ -151,7 +147,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.network.cloudengine.ce import get_nc_config, set_nc_config, ce_argument_spec
 
 
-# get snmp community
+# get snmp commutiny
 CE_GET_SNMP_COMMUNITY_HEADER = """
     <filter type="subtree">
       <snmp xmlns="http://www.huawei.com/netconf/vrp" content-version="1.0" format-version="1.0">
@@ -166,7 +162,7 @@ CE_GET_SNMP_COMMUNITY_TAIL = """
       </snmp>
     </filter>
 """
-# merge snmp community
+# merge snmp commutiny
 CE_MERGE_SNMP_COMMUNITY_HEADER = """
     <config>
       <snmp xmlns="http://www.huawei.com/netconf/vrp" content-version="1.0" format-version="1.0">
@@ -181,7 +177,7 @@ CE_MERGE_SNMP_COMMUNITY_TAIL = """
       </snmp>
     </config>
 """
-# create snmp community
+# create snmp commutiny
 CE_CREATE_SNMP_COMMUNITY_HEADER = """
     <config>
       <snmp xmlns="http://www.huawei.com/netconf/vrp" content-version="1.0" format-version="1.0">
@@ -196,7 +192,7 @@ CE_CREATE_SNMP_COMMUNITY_TAIL = """
       </snmp>
     </config>
 """
-# delete snmp community
+# delete snmp commutiny
 CE_DELETE_SNMP_COMMUNITY_HEADER = """
     <config>
       <snmp xmlns="http://www.huawei.com/netconf/vrp" content-version="1.0" format-version="1.0">

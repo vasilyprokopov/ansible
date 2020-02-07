@@ -1,2 +1,2 @@
 dependencies:
-  - setup_mysql8
+  - setup_mysql_db

@@ -140,9 +140,8 @@ acl:
 '''
 
 import os
-import platform
 
-from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.basic import AnsibleModule, get_platform
 from ansible.module_utils._text import to_native
 
 
@@ -191,14 +190,14 @@ def build_command(module, mode, path, follow, default, recursive, recalculate_ma
     '''Builds and returns a getfacl/setfacl command.'''
     if mode == 'set':
         cmd = [module.get_bin_path('setfacl', True)]
-        cmd.extend(['-m', entry])
+        cmd.append('-m "%s"' % entry)
     elif mode == 'rm':
         cmd = [module.get_bin_path('setfacl', True)]
-        cmd.extend(['-x', entry])
+        cmd.append('-x "%s"' % entry)
     else:  # mode == 'get'
         cmd = [module.get_bin_path('getfacl', True)]
         # prevents absolute path warnings and removes headers
-        if platform.system().lower() == 'linux':
+        if get_platform().lower() == 'linux':
             cmd.append('--omit-header')
             cmd.append('--absolute-names')
 
@@ -211,9 +210,9 @@ def build_command(module, mode, path, follow, default, recursive, recalculate_ma
         cmd.append('--no-mask')
 
     if not follow:
-        if platform.system().lower() == 'linux':
+        if get_platform().lower() == 'linux':
             cmd.append('--physical')
-        elif platform.system().lower() == 'freebsd':
+        elif get_platform().lower() == 'freebsd':
             cmd.append('-h')
 
     if default:
@@ -226,7 +225,7 @@ def build_command(module, mode, path, follow, default, recursive, recalculate_ma
 def acl_changed(module, cmd):
     '''Returns true if the provided command affects the existing ACLs, false otherwise.'''
     # FreeBSD do not have a --test flag, so by default, it is safer to always say "true"
-    if platform.system().lower() == 'freebsd':
+    if get_platform().lower() == 'freebsd':
         return True
 
     cmd = cmd[:]  # lists are mutables so cmd would be overwritten without this
@@ -242,7 +241,7 @@ def acl_changed(module, cmd):
 def run_acl(module, cmd, check_rc=True):
 
     try:
-        (rc, out, err) = module.run_command(cmd, check_rc=check_rc)
+        (rc, out, err) = module.run_command(' '.join(cmd), check_rc=check_rc)
     except Exception as e:
         module.fail_json(msg=to_native(e))
 
@@ -287,7 +286,7 @@ def main():
         supports_check_mode=True,
     )
 
-    if platform.system().lower() not in ['linux', 'freebsd']:
+    if get_platform().lower() not in ['linux', 'freebsd']:
         module.fail_json(msg="The acl module is not available on this system.")
 
     path = module.params.get('path')
@@ -339,7 +338,7 @@ def main():
         if default_flag is not None:
             default = default_flag
 
-    if platform.system().lower() == 'freebsd':
+    if get_platform().lower() == 'freebsd':
         if recursive:
             module.fail_json(msg="recursive is not supported on that platform.")
 

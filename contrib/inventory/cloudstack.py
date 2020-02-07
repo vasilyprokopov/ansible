@@ -70,8 +70,7 @@ based on the data obtained from CloudStack API:
 usage: cloudstack.py [--list] [--host HOST] [--project PROJECT]  [--domain DOMAIN]
 """
 
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
+from __future__ import print_function
 
 import sys
 import argparse

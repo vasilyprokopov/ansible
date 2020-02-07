@@ -187,43 +187,43 @@ state:
         fqdn:
             description:
                 - Fully qualified domain name of the record set.
-            returned: always
+            return: always
             type: str
             sample: www.b57dc95985712e4523282.com
         etag:
             description:
                 - The etag of the record set.
-            returned: always
+            return: always
             type: str
             sample: 692c3e92-a618-46fc-aecd-8f888807cd6c
         provisioning_state:
             description:
                 - The DNS record set state.
-            returned: always
+            return: always
             type: str
             sample: Succeeded
         target_resource:
             description:
                 - The target resource of the record set.
-            returned: always
+            return: always
             type: dict
             sample: {}
         ttl:
             description:
                 - The TTL(time-to-live) of the records in the records set.
-            returned: always
+            return: always
             type: int
             sample: 3600
         type:
             description:
                 - The type of DNS record in this record set.
-            returned: always
+            return: always
             type: str
             sample: A
         arecords:
             description:
                 - A list of records in the record set.
-            returned: always
+            return: always
             type: list
             sample: [
             {

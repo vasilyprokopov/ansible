@@ -191,10 +191,10 @@ def main():
 
     aci = ACIModule(module)
 
-    mcp = module.params.get('mcp')
-    description = module.params.get('description')
-    admin_state = aci.boolean(module.params.get('admin_state'), 'enabled', 'disabled')
-    state = module.params.get('state')
+    mcp = module.params['mcp']
+    description = module.params['description']
+    admin_state = aci.boolean(module.params['admin_state'], 'enabled', 'disabled')
+    state = module.params['state']
 
     aci.construct_url(
         root_class=dict(

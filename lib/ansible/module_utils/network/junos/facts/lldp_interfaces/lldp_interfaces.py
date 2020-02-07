@@ -100,5 +100,5 @@ class Lldp_interfacesFacts(object):
         config = deepcopy(spec)
         config['name'] = utils.get_xml_conf_arg(conf, 'name')
         if utils.get_xml_conf_arg(conf, 'disable', data='tag'):
-            config['enabled'] = False
+            config['enable'] = False
         return utils.remove_empties(config)

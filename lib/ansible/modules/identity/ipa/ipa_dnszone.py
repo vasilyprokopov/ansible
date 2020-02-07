@@ -12,7 +12,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'supported_by': 'community'}
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = '''
 ---
 module: ipa_dnszone
 author: Fran Fitzpatrick (@fxfitz)
@@ -24,42 +24,39 @@ options:
     description:
     - The DNS zone name to which needs to be managed.
     required: true
-    type: str
   state:
     description: State to ensure
     required: false
     default: present
-    choices: ["absent", "present"]
-    type: str
+    choices: ["present", "absent"]
   dynamicupdate:
     description: Apply dynamic update to zone
     required: false
     default: "false"
     choices: ["false", "true"]
     version_added: "2.9"
-    type: str
 extends_documentation_fragment: ipa.documentation
 version_added: "2.5"
 '''
 
-EXAMPLES = r'''
-- name: Ensure dns zone is present
-  ipa_dnszone:
+EXAMPLES = '''
+# Ensure dns zone is present
+- ipa_dnszone:
     ipa_host: spider.example.com
     ipa_pass: Passw0rd!
     state: present
     zone_name: example.com
 
-- name: Ensure dns zone is present and is dynamic update
-  ipa_dnszone:
+# Ensure dns zone is present and is dynamic update
+- ipa_dnszone:
     ipa_host: spider.example.com
     ipa_pass: Passw0rd!
     state: present
     zone_name: example.com
     dynamicupdate: true
 
-- name: Ensure that dns zone is removed
-  ipa_dnszone:
+# Ensure that dns zone is removed
+- ipa_dnszone:
     zone_name: example.com
     ipa_host: localhost
     ipa_user: admin
@@ -67,7 +64,7 @@ EXAMPLES = r'''
     state: absent
 '''
 
-RETURN = r'''
+RETURN = '''
 zone:
   description: DNS zone as returned by IPA API.
   returned: always

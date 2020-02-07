@@ -34,7 +34,7 @@ options:
 """
 
 EXAMPLES = """
-- name: configure igmp interface
+- name: configure igmp interfcae
   onyx_igmp_interface:
     state: enabled
     name: Eth1/1

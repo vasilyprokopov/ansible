@@ -94,9 +94,7 @@ _DISTRO_RELEASE_IGNORE_BASENAMES = (
     'lsb-release',
     'oem-release',
     _OS_RELEASE_BASENAME,
-    'system-release',
-    # Fixed in upstream via https://github.com/nir0s/distro/pull/246
-    'plesk-release'
+    'system-release'
 )
 
 

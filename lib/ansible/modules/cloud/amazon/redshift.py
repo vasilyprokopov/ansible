@@ -21,158 +21,117 @@ module: redshift
 version_added: "2.2"
 short_description: create, delete, or modify an Amazon Redshift instance
 description:
-  - Creates, deletes, or modifies Amazon Redshift cluster instances.
+  - Creates, deletes, or modifies amazon Redshift cluster instances.
 options:
   command:
     description:
       - Specifies the action to take.
     required: true
     choices: [ 'create', 'facts', 'delete', 'modify' ]
-    type: str
   identifier:
     description:
       - Redshift cluster identifier.
     required: true
-    type: str
   node_type:
     description:
-      - The node type of the cluster.
-      - Require when I(command=create).
-    choices: ['ds1.xlarge', 'ds1.8xlarge', 'ds2.xlarge', 'ds2.8xlarge', 'dc1.large','dc2.large',
-              'dc1.8xlarge', 'dw1.xlarge', 'dw1.8xlarge', 'dw2.large', 'dw2.8xlarge']
-    type: str
+      - The node type of the cluster. Must be specified when command=create.
+    choices: ['ds1.xlarge', 'ds1.8xlarge', 'ds2.xlarge', 'ds2.8xlarge', 'dc1.large', 'dc1.8xlarge', 'dc2.large', 'dc2.8xlarge',
+              'dw1.xlarge', 'dw1.8xlarge', 'dw2.large', 'dw2.8xlarge']
   username:
     description:
-      - Master database username.
-      - Used only when I(command=create).
-    type: str
+      - Master database username. Used only when command=create.
   password:
     description:
-      - Master database password.
-      - Used only when I(command=create).
-    type: str
+      - Master database password. Used only when command=create.
   cluster_type:
     description:
       - The type of cluster.
     choices: ['multi-node', 'single-node' ]
     default: 'single-node'
-    type: str
   db_name:
     description:
       - Name of the database.
-    type: str
   availability_zone:
     description:
-      - Availability zone in which to launch cluster.
+      - availability zone in which to launch cluster
     aliases: ['zone', 'aws_zone']
-    type: str
   number_of_nodes:
     description:
-      - Number of nodes.
-      - Only used when I(cluster_type=multi-node).
-    type: int
+      - Number of nodes. Only used when cluster_type=multi-node.
   cluster_subnet_group_name:
     description:
-      - Which subnet to place the cluster.
+      - which subnet to place the cluster
     aliases: ['subnet']
-    type: str
   cluster_security_groups:
     description:
-      - In which security group the cluster belongs.
-    type: list
-    elements: str
+      - in which security group the cluster belongs
     aliases: ['security_groups']
   vpc_security_group_ids:
     description:
       - VPC security group
     aliases: ['vpc_security_groups']
-    type: list
-    elements: str
   skip_final_cluster_snapshot:
     description:
-      - Skip a final snapshot before deleting the cluster.
-      - Used only when I(command=delete).
+      - skip a final snapshot before deleting the cluster. Used only when command=delete.
     aliases: ['skip_final_snapshot']
-    default: false
+    default: 'no'
     version_added: "2.4"
-    type: bool
   final_cluster_snapshot_identifier:
     description:
-      - Identifier of the final snapshot to be created before deleting the cluster.
-      - If this parameter is provided, I(skip_final_cluster_snapshot) must be C(false).
-      - Used only when I(command=delete).
+      - identifier of the final snapshot to be created before deleting the cluster. If this parameter is provided,
+        final_cluster_snapshot_identifier must be false. Used only when command=delete.
     aliases: ['final_snapshot_id']
     version_added: "2.4"
-    type: str
   preferred_maintenance_window:
     description:
-      - 'Maintenance window in format of C(ddd:hh24:mi-ddd:hh24:mi).  (Example: C(Mon:22:00-Mon:23:15))'
-      - Times are specified in UTC.
-      - If not specified then a random 30 minute maintenance window is assigned.
+      - maintenance window
     aliases: ['maintance_window', 'maint_window']
-    type: str
   cluster_parameter_group_name:
     description:
-      - Name of the cluster parameter group.
+      - name of the cluster parameter group
     aliases: ['param_group_name']
-    type: str
   automated_snapshot_retention_period:
     description:
-      - The number of days that automated snapshots are retained.
+      - period when the snapshot take place
     aliases: ['retention_period']
-    type: int
   port:
     description:
-      - Which port the cluster is listening on.
-    type: int
+      - which port the cluster is listening
   cluster_version:
     description:
-      - Which version the cluster should have.
+      - which version the cluster should have
     aliases: ['version']
     choices: ['1.0']
-    type: str
   allow_version_upgrade:
     description:
-      - When I(allow_version_upgrade=true) the cluster may be automatically
-        upgraded during the maintenance window.
+      - flag to determinate if upgrade of version is possible
     aliases: ['version_upgrade']
-    default: true
-    type: bool
+    default: 'yes'
   publicly_accessible:
     description:
-      - If the cluster is accessible publicly or not.
-    default: false
-    type: bool
+      - if the cluster is accessible publicly or not
+    default: 'no'
   encrypted:
     description:
-      - If the cluster is encrypted or not.
-    default: false
-    type: bool
+      -  if the cluster is encrypted or not
+    default: 'no'
   elastic_ip:
     description:
-      - An Elastic IP to use for the cluster.
-    type: str
+      - if the cluster has an elastic IP or not
   new_cluster_identifier:
     description:
       - Only used when command=modify.
     aliases: ['new_identifier']
-    type: str
   wait:
     description:
-      - When I(command=create), I(command=modify) or I(command=restore) then wait for the database to enter the 'available' state.
-      - When I(command=delete) wait for the database to be terminated.
+      - When command=create, modify or restore then wait for the database to enter the 'available' state.
+        When command=delete wait for the database to be terminated.
     type: bool
-    default: false
+    default: 'no'
   wait_timeout:
     description:
-      - When I(wait=true) defines how long in seconds before giving up.
+      - how long before wait gives up, in seconds
     default: 300
-    type: int
-  enhanced_vpc_routing:
-    description:
-      - Whether the cluster should have enhanced VPC routing enabled.
-    default: false
-    type: bool
 requirements: [ 'boto3' ]
 extends_documentation_fragment:
   - aws
@@ -255,7 +214,7 @@ cluster:
         enhanced_vpc_routing:
             description: status of the enhanced vpc routing feature.
             returned: success
-            type: bool
+            type: boolean
 '''
 
 try:
@@ -515,7 +474,7 @@ def main():
                                 'dw2.large', 'dw2.8xlarge'], required=False),
         username=dict(required=False),
         password=dict(no_log=True, required=False),
-        db_name=dict(required=False),
+        db_name=dict(require=False),
         cluster_type=dict(choices=['multi-node', 'single-node'], default='single-node'),
         cluster_security_groups=dict(aliases=['security_groups'], type='list'),
         vpc_security_group_ids=dict(aliases=['vpc_security_groups'], type='list'),

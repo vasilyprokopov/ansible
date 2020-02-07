@@ -54,6 +54,12 @@ class NameStringIO(StringIO):
 
 class TestAnsibleLoaderBasic(unittest.TestCase):
 
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
     def test_parse_number(self):
         stream = StringIO(u"""
                 1

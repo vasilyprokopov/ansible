@@ -18,8 +18,7 @@ def cloudscale_argument_spec():
     return dict(
         api_token=dict(fallback=(env_fallback, ['CLOUDSCALE_API_TOKEN']),
                        no_log=True,
-                       required=True,
-                       type='str'),
+                       required=True),
         api_timeout=dict(default=30, type='int'),
     )
 

@@ -14,14 +14,6 @@ import tempfile
 
 from .. import types as t
 
-from ..encoding import (
-    to_bytes,
-)
-
-from ..io import (
-    read_text_file,
-)
-
 from ..util import (
     ApplicationError,
     display,
@@ -29,6 +21,7 @@ from ..util import (
     import_plugins,
     load_plugins,
     ABC,
+    to_bytes,
     ANSIBLE_TEST_CONFIG_ROOT,
 )
 
@@ -372,10 +365,11 @@ class CloudProvider(CloudBase):
         """
         :rtype: str
         """
-        lines = read_text_file(self.config_template_path).splitlines()
-        lines = [line for line in lines if not line.startswith('#')]
-        config = '\n'.join(lines).strip() + '\n'
-        return config
+        with open(self.config_template_path, 'r') as template_fd:
+            lines = template_fd.read().splitlines()
+            lines = [l for l in lines if not l.startswith('#')]
+            config = '\n'.join(lines).strip() + '\n'
+            return config
 
     @staticmethod
     def _populate_config_template(template, values):

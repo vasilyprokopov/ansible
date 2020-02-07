@@ -60,15 +60,14 @@ class TestNiosPTRRecordModule(TestNiosModule):
 
     def test_nios_ptr_record_create(self):
         self.module.params = {'provider': None, 'state': 'present', 'ptrdname': 'ansible.test.com',
-                              'ipv4addr': '10.36.241.14', 'comment': None, 'extattrs': None, 'view': 'default'}
+                              'ipv4addr': '10.36.241.14', 'comment': None, 'extattrs': None}
 
         test_object = None
         test_spec = {
             "ipv4addr": {"ib_req": True},
             "ptrdname": {"ib_req": True},
             "comment": {},
-            "extattrs": {},
-            "view": {"ib_req": True}
+            "extattrs": {}
         }
 
         wapi = self._get_wapi(test_object)
@@ -76,11 +75,11 @@ class TestNiosPTRRecordModule(TestNiosModule):
         res = wapi.run('testobject', test_spec)
 
         self.assertTrue(res['changed'])
-        wapi.create_object.assert_called_once_with('testobject', {'ipv4addr': '10.36.241.14', 'ptrdname': 'ansible.test.com', 'view': 'default'})
+        wapi.create_object.assert_called_once_with('testobject', {'ipv4addr': '10.36.241.14', 'ptrdname': 'ansible.test.com'})
 
     def test_nios_ptr_record_remove(self):
         self.module.params = {'provider': None, 'state': 'absent', 'ptrdname': 'ansible.test.com',
-                              'ipv4addr': '10.36.241.14', 'comment': None, 'extattrs': None, 'view': 'default'}
+                              'ipv4addr': '10.36.241.14', 'comment': None, 'extattrs': None}
 
         ref = "record:ptr/ZG5zLm5ldHdvcmtfdmlldyQw:14.241.36.10.in-addr.arpa/default"
 
@@ -89,7 +88,6 @@ class TestNiosPTRRecordModule(TestNiosModule):
             "_ref": ref,
             "ptrdname": "ansible.test.com",
             "ipv4addr": "10.36.241.14",
-            "view": "default",
             "extattrs": {'Site': {'value': 'test'}}
         }]
 
@@ -97,8 +95,7 @@ class TestNiosPTRRecordModule(TestNiosModule):
             "ipv4addr": {"ib_req": True},
             "ptrdname": {"ib_req": True},
             "comment": {},
-            "extattrs": {},
-            "view": {"ib_req": True}
+            "extattrs": {}
         }
 
         wapi = self._get_wapi(test_object)
@@ -108,7 +105,7 @@ class TestNiosPTRRecordModule(TestNiosModule):
 
     def test_nios_ptr_record_update_comment(self):
         self.module.params = {'provider': None, 'state': 'present', 'ptrdname': 'ansible.test.com',
-                              'ipv4addr': '10.36.241.14', 'comment': 'updated comment', 'extattrs': None, 'view': 'default'}
+                              'ipv4addr': '10.36.241.14', 'comment': 'updated comment', 'extattrs': None}
 
         test_object = [
             {
@@ -116,8 +113,7 @@ class TestNiosPTRRecordModule(TestNiosModule):
                 "_ref": "record:ptr/ZG5zLm5ldHdvcmtfdmlldyQw:14.241.36.10.in-addr.arpa/default",
                 "ptrdname": "ansible.test.com",
                 "ipv4addr": "10.36.241.14",
-                "extattrs": {},
-                "view": "default"
+                "extattrs": {}
             }
         ]
 
@@ -125,8 +121,7 @@ class TestNiosPTRRecordModule(TestNiosModule):
             "ipv4addr": {"ib_req": True},
             "ptrdname": {"ib_req": True},
             "comment": {},
-            "extattrs": {},
-            "view": {"ib_req": True}
+            "extattrs": {}
         }
 
         wapi = self._get_wapi(test_object)
@@ -137,7 +132,7 @@ class TestNiosPTRRecordModule(TestNiosModule):
 
     def test_nios_ptr_record_update_record_ptrdname(self):
         self.module.params = {'provider': None, 'state': 'present', 'ptrdname': 'ansible.test.org',
-                              'ipv4addr': '10.36.241.14', 'comment': 'comment', 'extattrs': None, 'view': 'default'}
+                              'ipv4addr': '10.36.241.14', 'comment': 'comment', 'extattrs': None}
 
         test_object = [
             {
@@ -145,8 +140,7 @@ class TestNiosPTRRecordModule(TestNiosModule):
                 "_ref": "record:ptr/ZG5zLm5ldHdvcmtfdmlldyQw:14.241.36.10.in-addr.arpa/default",
                 "ptrdname": "ansible.test.com",
                 "ipv4addr": "10.36.241.14",
-                "extattrs": {},
-                "view": "default"
+                "extattrs": {}
             }
         ]
 
@@ -154,8 +148,7 @@ class TestNiosPTRRecordModule(TestNiosModule):
             "ipv4addr": {"ib_req": True},
             "ptrdname": {"ib_req": True},
             "comment": {},
-            "extattrs": {},
-            "view": {"ib_req": True}
+            "extattrs": {}
         }
 
         wapi = self._get_wapi(test_object)
@@ -166,19 +159,17 @@ class TestNiosPTRRecordModule(TestNiosModule):
 
     def test_nios_ptr6_record_create(self):
         self.module.params = {'provider': None, 'state': 'present', 'ptrdname': 'ansible6.test.com',
-                              'ipv6addr': '2002:8ac3:802d:1242:20d:60ff:fe38:6d16', 'comment': None, 'extattrs': None, 'view': 'default'}
+                              'ipv6addr': '2002:8ac3:802d:1242:20d:60ff:fe38:6d16', 'comment': None, 'extattrs': None}
 
         test_object = None
         test_spec = {"ipv6addr": {"ib_req": True},
                      "ptrdname": {"ib_req": True},
                      "comment": {},
-                     "extattrs": {},
-                     "view": {"ib_req": True}}
+                     "extattrs": {}}
 
         wapi = self._get_wapi(test_object)
         print("WAPI: ", wapi)
         res = wapi.run('testobject', test_spec)
 
         self.assertTrue(res['changed'])
-        wapi.create_object.assert_called_once_with('testobject', {'ipv6addr': '2002:8ac3:802d:1242:20d:60ff:fe38:6d16',
-                                                                  'ptrdname': 'ansible6.test.com', 'view': 'default'})
+        wapi.create_object.assert_called_once_with('testobject', {'ipv6addr': '2002:8ac3:802d:1242:20d:60ff:fe38:6d16', 'ptrdname': 'ansible6.test.com'})

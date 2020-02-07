@@ -20,7 +20,9 @@ def test_xenserverobject_xenapi_lib_detection(mocker, fake_ansible_module, xense
     with pytest.raises(FailJsonException) as exc_info:
         xenserver.XenServerObject(fake_ansible_module)
 
-    assert 'Failed to import the required Python library (XenAPI) on' in exc_info.value.kwargs['msg']
+    assert exc_info.value.kwargs['msg'] == ("XenAPI Python library is required for this module! "
+                                            "Please download XenServer SDK and copy XenAPI.py to your Python site-packages. "
+                                            "Check Notes section in module documentation for more info.")
 
 
 def test_xenserverobject_xenapi_failure(mock_xenapi_failure, fake_ansible_module, xenserver):

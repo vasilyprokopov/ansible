@@ -223,7 +223,6 @@ install_manpages:
 
 .PHONY: sdist_check
 sdist_check:
-	$(PYTHON) -c 'import setuptools, sys; sys.exit(int(not (tuple(map(int, setuptools.__version__.split("."))) > (39, 2, 0))))'
 	$(PYTHON) packaging/sdist/check-link-behavior.py
 
 .PHONY: sdist
@@ -302,7 +301,7 @@ rpm: rpmcommon
 	--define "_srcrpmdir %{_topdir}" \
 	--define "_specdir $(RPMSPECDIR)" \
 	--define "_sourcedir %{_topdir}" \
-	--define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
+	--define "_rpmfilename $(RPMNVR).%%{ARCH}.rpm" \
 	--define "__python `which $(PYTHON)`" \
 	--define "upstream_version $(VERSION)" \
 	--define "rpmversion $(RPMVERSION)" \

@@ -27,6 +27,7 @@ $spec = @{
         session = @{ type='int' }
         priority = @{ type='str'; choices=@( 'background', 'low', 'belownormal', 'abovenormal', 'high', 'realtime' ) }
         timeout = @{ type='int' }
+        extra_opts = @{ type='list'; removed_in_version = '2.10' }
     }
 }
 
@@ -48,6 +49,7 @@ $interactive = $module.Params.interactive
 $session = $module.Params.session
 $priority = $module.Params.Priority
 $timeout = $module.Params.timeout
+$extra_opts = $module.Params.extra_opts
 
 $module.Result.changed = $true
 
@@ -118,6 +120,13 @@ If ($null -ne $priority) {
 If ($null -ne $timeout) {
     $arguments.Add("-n")
     $arguments.Add($timeout)
+}
+
+# Add additional advanced options
+If ($extra_opts) {
+    ForEach ($opt in $extra_opts) {
+        $arguments.Add($opt)
+    }
 }
 
 $arguments.Add("-accepteula")

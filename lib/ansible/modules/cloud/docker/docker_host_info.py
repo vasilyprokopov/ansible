@@ -155,7 +155,6 @@ volumes:
         See description for I(verbose_output).
     returned: When I(volumes) is C(yes)
     type: list
-    elements: dict
 networks:
     description:
       - List of dict objects containing the basic information about each network.
@@ -163,7 +162,6 @@ networks:
         See description for I(verbose_output).
     returned: When I(networks) is C(yes)
     type: list
-    elements: dict
 containers:
     description:
       - List of dict objects containing the basic information about each container.
@@ -171,7 +169,6 @@ containers:
         See description for I(verbose_output).
     returned: When I(containers) is C(yes)
     type: list
-    elements: dict
 images:
     description:
       - List of dict objects containing the basic information about each image.
@@ -179,7 +176,6 @@ images:
         See description for I(verbose_output).
     returned: When I(images) is C(yes)
     type: list
-    elements: dict
 disk_usage:
     description:
       - Information on summary disk usage by images, containers and volumes on docker host

@@ -208,7 +208,7 @@ def main():
                        'id': meraki.params['org_id'],
                        }
             original = get_org(meraki, meraki.params['org_id'], orgs)
-            if meraki.is_update_required(original, payload, optional_ignore=['url']):
+            if meraki.is_update_required(original, payload):
                 response = meraki.request(meraki.construct_path('update',
                                                                 org_id=meraki.params['org_id']
                                                                 ),

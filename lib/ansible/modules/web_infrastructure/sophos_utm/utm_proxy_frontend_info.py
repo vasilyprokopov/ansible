@@ -55,31 +55,31 @@ result:
     contains:
         _ref:
             description: The reference name of the object
-            type: str
+            type: string
         _locked:
             description: Whether or not the object is currently locked
-            type: bool
+            type: boolean
         _type:
             description: The type of the object
-            type: str
+            type: string
         name:
             description: The name of the object
-            type: str
+            type: string
         add_content_type_header:
             description: Whether to add the content type header
             type: bool
         address:
             description: The reference name of the address
-            type: str
+            type: string
         allowed_networks:
             description: List of reference names of networks associated
             type: list
         certificate:
             description: Reference name of certificate (ca/host_key_cert)
-            type: str
+            type: string
         comment:
             description: The comment string
-            type: str
+            type: string
         disable_compression:
             description: State of compression support
             type: bool
@@ -100,7 +100,7 @@ result:
             type: bool
         lbmethod:
             description: The method of loadbalancer to use
-            type: str
+            type: string
         locations:
             description: The reference names of reverse_proxy/locations associated with the object
             type: list
@@ -112,13 +112,13 @@ result:
             type: bool
         profile:
             description: The associated reverse_proxy/profile
-            type: str
+            type: string
         status:
             description: Whether the frontend object is active or not
             type: bool
         type:
             description: The connection type
-            type: str
+            type: string
         xheaders:
             description: The xheaders state
             type: bool

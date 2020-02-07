@@ -2,9 +2,6 @@
 # Copyright (c) 2017 Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
-
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'community'}
@@ -13,7 +10,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: aws_direct_connect_virtual_interface
-short_description: Manage Direct Connect virtual interfaces
+short_description: Manage Direct Connect virtual interfaces.
 description:
   - Create, delete, or modify a Direct Connect public or private virtual interface.
 version_added: "2.5"
@@ -26,14 +23,10 @@ options:
     description:
       - The desired state of the Direct Connect virtual interface.
     choices: [present, absent]
-    type: str
-    required: true
   id_to_associate:
     description:
       - The ID of the link aggregation group or connection to associate with the virtual interface.
     aliases: [link_aggregation_group_id, connection_id]
-    type: str
-    required: true
   public:
     description:
       - The type of virtual interface.
@@ -41,46 +34,35 @@ options:
   name:
     description:
       - The name of the virtual interface.
-    type: str
   vlan:
     description:
       - The VLAN ID.
     default: 100
-    type: int
   bgp_asn:
     description:
       - The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
     default: 65000
-    type: int
   authentication_key:
     description:
       - The authentication key for BGP configuration.
-    type: str
   amazon_address:
     description:
       - The amazon address CIDR with which to create the virtual interface.
-    type: str
   customer_address:
     description:
       - The customer address CIDR with which to create the virtual interface.
-    type: str
   address_type:
     description:
       - The type of IP address for the BGP peer.
-    type: str
   cidr:
     description:
       - A list of route filter prefix CIDRs with which to create the public virtual interface.
-    type: list
-    elements: str
   virtual_gateway_id:
     description:
       - The virtual gateway ID required for creating a private virtual interface.
-    type: str
   virtual_interface_id:
     description:
       - The virtual interface ID.
-    type: str
 extends_documentation_fragment:
   - aws
   - ec2
@@ -240,12 +222,14 @@ EXAMPLES = '''
 import traceback
 from ansible.module_utils.aws.core import AnsibleAWSModule
 from ansible.module_utils.aws.direct_connect import DirectConnectError, delete_virtual_interface
-from ansible.module_utils.ec2 import AWSRetry, camel_dict_to_snake_dict
+from ansible.module_utils.ec2 import (AWSRetry, HAS_BOTO3, boto3_conn,
+                                      ec2_argument_spec, get_aws_connection_info,
+                                      camel_dict_to_snake_dict)
 
 try:
     from botocore.exceptions import ClientError, BotoCoreError
 except ImportError:
-    # handled by AnsibleAWSModule
+    # handled by HAS_BOTO3
     pass
 
 
@@ -459,7 +443,8 @@ def ensure_state(connection, module):
 
 
 def main():
-    argument_spec = dict(
+    argument_spec = ec2_argument_spec()
+    argument_spec.update(dict(
         state=dict(required=True, choices=['present', 'absent']),
         id_to_associate=dict(required=True, aliases=['link_aggregation_group_id', 'connection_id']),
         public=dict(type='bool'),
@@ -473,7 +458,7 @@ def main():
         cidr=dict(type='list'),
         virtual_gateway_id=dict(),
         virtual_interface_id=dict()
-    )
+    ))
 
     module = AnsibleAWSModule(argument_spec=argument_spec,
                               required_one_of=[['virtual_interface_id', 'name']],
@@ -483,7 +468,8 @@ def main():
                                            ['public', True, ['customer_address']],
                                            ['public', True, ['cidr']]])
 
-    connection = module.client('directconnect')
+    region, ec2_url, aws_connect_kwargs = get_aws_connection_info(module, boto3=True)
+    connection = boto3_conn(module, conn_type='client', resource='directconnect', region=region, endpoint=ec2_url, **aws_connect_kwargs)
 
     try:
         changed, latest_state = ensure_state(connection, module)

@@ -115,12 +115,6 @@ options:
             - 3
             - ''
         version_added: "2.8"
-    lun:
-        description:
-            - The logical unit number for data disk.
-            - This value is used to identify data disks within the VM and therefore must be unique for each data disk attached to a VM.
-        type: int
-        version_added: '2.10'
 
 extends_documentation_fragment:
     - azure
@@ -164,7 +158,7 @@ EXAMPLES = '''
         disk_size_gb: 4
 
     - name: Delete managed disk
-      azure_rm_manageddisk:
+      azure_rm_manage_disk:
         name: mymanageddisk
         location: eastus
         resource_group: myResourceGroup
@@ -269,9 +263,6 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             attach_caching=dict(
                 type='str',
                 choices=['', 'read_only', 'read_write']
-            ),
-            lun=dict(
-                type='int'
             )
         )
         required_if = [
@@ -295,7 +286,6 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         self.zone = None
         self.managed_by = None
         self.attach_caching = None
-        self.lun = None
         super(AzureRMManagedDisk, self).__init__(
             derived_arg_spec=self.module_arg_spec,
             required_if=required_if,
@@ -353,12 +343,9 @@ class AzureRMManagedDisk(AzureRMModuleBase):
     def attach(self, vm_name, disk):
         vm = self._get_vm(vm_name)
         # find the lun
-        if self.lun:
-            lun = self.lun
-        else:
-            luns = ([d.lun for d in vm.storage_profile.data_disks]
-                    if vm.storage_profile.data_disks else [])
-            lun = max(luns) + 1 if luns else 0
+        luns = ([d.lun for d in vm.storage_profile.data_disks]
+                if vm.storage_profile.data_disks else [])
+        lun = max(luns) + 1 if luns else 0
 
         # prepare the data disk
         params = self.compute_models.ManagedDiskParameters(id=disk.get('id'), storage_account_type=disk.get('storage_account_type'))

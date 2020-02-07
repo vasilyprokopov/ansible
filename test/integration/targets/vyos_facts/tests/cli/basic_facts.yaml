@@ -1,4 +1,3 @@
----
 - name: get host name
   vyos_command:
     commands:

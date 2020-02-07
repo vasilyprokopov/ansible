@@ -14,7 +14,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = '''
 ---
 module: ecs_task
-short_description: Run, start or stop a task in ecs
+short_description: run, start or stop a task in ecs
 description:
     - Creates or deletes instances of task definitions.
 version_added: "2.0"
@@ -23,73 +23,49 @@ requirements: [ json, botocore, boto3 ]
 options:
     operation:
         description:
-            - Which task operation to execute.
+            - Which task operation to execute
         required: True
         choices: ['run', 'start', 'stop']
-        type: str
     cluster:
         description:
-            - The name of the cluster to run the task on.
+            - The name of the cluster to run the task on
         required: False
-        type: str
     task_definition:
         description:
-            - The task definition to start or run.
+            - The task definition to start or run
         required: False
-        type: str
     overrides:
         description:
-            - A dictionary of values to pass to the new instances.
+            - A dictionary of values to pass to the new instances
         required: False
-        type: dict
     count:
         description:
-            - How many new instances to start.
+            - How many new instances to start
         required: False
-        type: int
     task:
         description:
-            - The task to stop.
+            - The task to stop
         required: False
-        type: str
     container_instances:
         description:
-            - The list of container instances on which to deploy the task.
+            - The list of container instances on which to deploy the task
         required: False
-        type: list
-        elements: str
     started_by:
         description:
-            - A value showing who or what started the task (for informational purposes).
+            - A value showing who or what started the task (for informational purposes)
         required: False
-        type: str
     network_configuration:
         description:
-          - Network configuration of the service. Only applicable for task definitions created with I(network_mode=awsvpc).
-        type: dict
-        suboptions:
-            subnets:
-                description: A list of subnet IDs to which the task is attached.
-                type: list
-                elements: str
-            security_groups:
-                description: A list of group names or group IDs for the task.
-                type: list
-                elements: str
+          - network configuration of the service. Only applicable for task definitions created with C(awsvpc) I(network_mode).
+          - I(network_configuration) has two keys, I(subnets), a list of subnet IDs to which the task is attached and I(security_groups),
+            a list of group names or group IDs for the task
         version_added: 2.6
     launch_type:
         description:
-          - The launch type on which to run your service.
+          - The launch type on which to run your service
         required: false
         version_added: 2.8
         choices: ["EC2", "FARGATE"]
-        type: str
-    tags:
-        type: dict
-        description:
-          - Tags that will be added to ecs tasks on start and run
-        required: false
-        version_added: "2.10"
 extends_documentation_fragment:
     - aws
     - ec2
@@ -114,11 +90,6 @@ EXAMPLES = '''
       cluster: console-sample-app-static-cluster
       task_definition: console-sample-app-static-taskdef
       task: "arn:aws:ecs:us-west-2:172139249013:task/3f8353d1-29a8-4689-bbf6-ad79937ffe8a"
-      tags:
-        resourceName: a_task_for_ansible_to_run
-        type: long_running_task
-        network: internal
-        version: 1.4
       container_instances:
       - arn:aws:ecs:us-west-2:172139249013:container-instance/79c23f22-876c-438a-bddf-55c98a3538a8
       started_by: ansible_user
@@ -178,8 +149,7 @@ task:
         overrides:
             description: The container overrides set for this task.
             returned: only when details is true
-            type: list
-            elements: dict
+            type: list of complex
         lastStatus:
             description: The last recorded status of the task.
             returned: only when details is true
@@ -191,8 +161,7 @@ task:
         containers:
             description: The container details.
             returned: only when details is true
-            type: list
-            elements: dict
+            type: list of complex
         startedBy:
             description: The used who started the task.
             returned: only when details is true
@@ -220,13 +189,12 @@ task:
 '''
 
 from ansible.module_utils.aws.core import AnsibleAWSModule
-from ansible.module_utils.basic import missing_required_lib
-from ansible.module_utils.ec2 import get_ec2_security_group_ids_from_names, ansible_dict_to_boto3_tag_list
+from ansible.module_utils.ec2 import ec2_argument_spec, get_ec2_security_group_ids_from_names
 
 try:
     import botocore
 except ImportError:
-    pass  # caught by AnsibleAWSModule
+    pass  # handled by AnsibleAWSModule
 
 
 class EcsExecManager:
@@ -266,7 +234,7 @@ class EcsExecManager:
                     return c
         return None
 
-    def run_task(self, cluster, task_definition, overrides, count, startedBy, launch_type, tags):
+    def run_task(self, cluster, task_definition, overrides, count, startedBy, launch_type):
         if overrides is None:
             overrides = dict()
         params = dict(cluster=cluster, taskDefinition=task_definition,
@@ -275,10 +243,6 @@ class EcsExecManager:
             params['networkConfiguration'] = self.format_network_configuration(self.module.params['network_configuration'])
         if launch_type:
             params['launchType'] = launch_type
-        if tags:
-            params['tags'] = ansible_dict_to_boto3_tag_list(tags, 'key', 'value')
-
-            # TODO: need to check if long arn format enabled.
         try:
             response = self.ecs.run_task(**params)
         except (botocore.exceptions.ClientError, botocore.exceptions.BotoCoreError) as e:
@@ -286,7 +250,7 @@ class EcsExecManager:
         # include tasks and failures
         return response['tasks']
 
-    def start_task(self, cluster, task_definition, overrides, container_instances, startedBy, tags):
+    def start_task(self, cluster, task_definition, overrides, container_instances, startedBy):
         args = dict()
         if cluster:
             args['cluster'] = cluster
@@ -300,8 +264,6 @@ class EcsExecManager:
             args['startedBy'] = startedBy
         if self.module.params['network_configuration']:
             args['networkConfiguration'] = self.format_network_configuration(self.module.params['network_configuration'])
-        if tags:
-            args['tags'] = ansible_dict_to_boto3_tag_list(tags, 'key', 'value')
         try:
             response = self.ecs.start_task(**args)
         except (botocore.exceptions.ClientError, botocore.exceptions.BotoCoreError) as e:
@@ -320,17 +282,6 @@ class EcsExecManager:
         # to e.g. ecs.run_task, it's just passed as a keyword argument)
         return LooseVersion(botocore.__version__) >= LooseVersion('1.8.4')
 
-    def ecs_task_long_format_enabled(self):
-        account_support = self.ecs.list_account_settings(name='taskLongArnFormat', effectiveSettings=True)
-        return account_support['settings'][0]['value'] == 'enabled'
-
-    def ecs_api_handles_tags(self):
-        from distutils.version import LooseVersion
-        # There doesn't seem to be a nice way to inspect botocore to look
-        # for attributes (and networkConfiguration is not an explicit argument
-        # to e.g. ecs.run_task, it's just passed as a keyword argument)
-        return LooseVersion(botocore.__version__) >= LooseVersion('1.12.46')
-
     def ecs_api_handles_network_configuration(self):
         from distutils.version import LooseVersion
         # There doesn't seem to be a nice way to inspect botocore to look
@@ -340,7 +291,8 @@ class EcsExecManager:
 
 
 def main():
-    argument_spec = dict(
+    argument_spec = ec2_argument_spec()
+    argument_spec.update(dict(
         operation=dict(required=True, choices=['run', 'start', 'stop']),
         cluster=dict(required=False, type='str'),  # R S P
         task_definition=dict(required=False, type='str'),  # R* S*
@@ -350,9 +302,8 @@ def main():
         container_instances=dict(required=False, type='list'),  # S*
         started_by=dict(required=False, type='str'),  # R S
         network_configuration=dict(required=False, type='dict'),
-        launch_type=dict(required=False, choices=['EC2', 'FARGATE']),
-        tags=dict(required=False, type='dict')
-    )
+        launch_type=dict(required=False, choices=['EC2', 'FARGATE'])
+    ))
 
     module = AnsibleAWSModule(argument_spec=argument_spec, supports_check_mode=True,
                               required_if=[('launch_type', 'FARGATE', ['network_configuration'])])
@@ -388,12 +339,6 @@ def main():
     if module.params['launch_type'] and not service_mgr.ecs_api_handles_launch_type():
         module.fail_json(msg='botocore needs to be version 1.8.4 or higher to use launch type')
 
-    if module.params['tags']:
-        if not service_mgr.ecs_api_handles_tags():
-            module.fail_json(msg=missing_required_lib("botocore >= 1.12.46", reason="to use tags"))
-        if not service_mgr.ecs_task_long_format_enabled():
-            module.fail_json(msg="Cannot set task tags: long format task arns are required to set tags")
-
     existing = service_mgr.list_tasks(module.params['cluster'], task_to_list, status_type)
 
     results = dict(changed=False)
@@ -409,9 +354,7 @@ def main():
                     module.params['overrides'],
                     module.params['count'],
                     module.params['started_by'],
-                    module.params['launch_type'],
-                    module.params['tags'],
-                )
+                    module.params['launch_type'])
             results['changed'] = True
 
     elif module.params['operation'] == 'start':
@@ -425,8 +368,7 @@ def main():
                     module.params['task_definition'],
                     module.params['overrides'],
                     module.params['container_instances'],
-                    module.params['started_by'],
-                    module.params['tags'],
+                    module.params['started_by']
                 )
             results['changed'] = True
 

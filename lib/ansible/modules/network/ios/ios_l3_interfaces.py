@@ -151,7 +151,7 @@ EXAMPLES = """
       - name: GigabitEthernet0/3.100
         ipv4:
         - address: 192.168.0.3/24
-    state: merged
+    operation: merged
 
 # After state:
 # ------------
@@ -213,7 +213,7 @@ EXAMPLES = """
         ipv4:
         - address: 192.168.0.3/24
           secondary: True
-    state: replaced
+    operation: replaced
 
 # After state:
 # ------------
@@ -269,7 +269,7 @@ EXAMPLES = """
       - name: GigabitEthernet0/3.100
         ipv6:
         - address: autoconfig
-    state: overridden
+    operation: overridden
 
 # After state:
 # ------------
@@ -321,7 +321,7 @@ EXAMPLES = """
     config:
       - name: GigabitEthernet0/2
       - name: GigabitEthernet0/3.100
-    state: deleted
+    operation: deleted
 
 # After state:
 # -------------
@@ -374,7 +374,7 @@ EXAMPLES = """
 
 - name: "Delete L3 attributes of ALL interfaces together (NOTE: This won't delete the interface itself)"
   ios_l3_interfaces:
-    state: deleted
+    operation: deleted
 
 # After state:
 # -------------
@@ -403,12 +403,12 @@ before:
   description: The configuration as structured data prior to module invocation.
   returned: always
   type: list
-  sample: The configuration returned will always be in the same format of the parameters above.
+  sample: The configuration returned will alwys be in the same format of the paramters above.
 after:
   description: The configuration as structured data after module completion.
   returned: when changed
   type: list
-  sample: The configuration returned will always be in the same format of the parameters above.
+  sample: The configuration returned will alwys be in the same format of the paramters above.
 commands:
   description: The set of commands pushed to the remote device
   returned: always
@@ -426,12 +426,7 @@ def main():
     Main entry point for module execution
     :returns: the result form module invocation
     """
-    required_if = [('state', 'merged', ('config',)),
-                   ('state', 'replaced', ('config',)),
-                   ('state', 'overridden', ('config',))]
-
     module = AnsibleModule(argument_spec=L3_InterfacesArgs.argument_spec,
-                           required_if=required_if,
                            supports_check_mode=True)
 
     result = L3_Interfaces(module).execute_module()

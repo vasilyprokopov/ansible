@@ -127,7 +127,7 @@ class TestConnectionClass(unittest.TestCase):
         """
 
         mock__shell.recv.side_effect = [response, None]
-        conn.send(b'command')
+        output = conn.send(b'command')
 
         mock__shell.sendall.assert_called_with(b'command\r')
         self.assertEqual(to_text(conn._command_response), 'command response')

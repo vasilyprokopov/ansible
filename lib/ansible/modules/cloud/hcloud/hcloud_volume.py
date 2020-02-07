@@ -18,12 +18,12 @@ DOCUMENTATION = """
 ---
 module: hcloud_volume
 
-short_description: Create and manage block Volume on the Hetzner Cloud.
+short_description: Create and manage block volumes on the Hetzner Cloud.
 
 version_added: "2.8"
 
 description:
-    - Create, update and attach/detach block Volume on the Hetzner Cloud.
+    - Create, update and attach/detach block volumes on the Hetzner Cloud.
 
 author:
     - Christopher Schmitt (@cschmitt-hcloud)
@@ -41,7 +41,7 @@ options:
         type: str
     size:
         description:
-            - The size of the Block Volume in GB.
+            - The size of the Block Volume.
             - Required if volume does not yet exists.
         type: int
     automount:
@@ -64,18 +64,13 @@ options:
             - Server Name the Volume should be assigned to.
             - Required if no I(location) is given and Volume does not exists.
         type: str
-    delete_protection:
-        description:
-            - Protect the Volume for deletion.
-        type: bool
-        version_added: "2.10"
     labels:
         description:
             - User-defined key-value pairs.
         type: dict
     state:
         description:
-            - State of the Volume.
+            - State of the volume.
         default: present
         choices: [absent, present]
         type: str
@@ -83,32 +78,32 @@ extends_documentation_fragment: hcloud
 """
 
 EXAMPLES = """
-- name: Create a Volume
+- name: Create a volume
   hcloud_volume:
     name: my-volume
     location: fsn1
     size: 100
     state: present
-- name: Create a Volume and format it with ext4
+- name: Create a volume and format it with ext4
   hcloud_volume:
     name: my-volume
     location: fsn
     format: ext4
     size: 100
     state: present
-- name: Mount a existing Volume and automount
+- name: Mount a existing volume and automount
   hcloud_volume:
     name: my-volume
     server: my-server
     automount: yes
     state: present
-- name: Mount a existing Volume and automount
+- name: Mount a existing volume and automount
   hcloud_volume:
     name: my-volume
     server: my-server
     automount: yes
     state: present
-- name: Ensure the Volume is absent (remove if needed)
+- name: Ensure the volume is absent (remove if needed)
   hcloud_volume:
     name: my-volume
     state: absent
@@ -116,34 +111,28 @@ EXAMPLES = """
 
 RETURN = """
 hcloud_volume:
-    description: The block Volume
+    description: The block volume
     returned: Always
     type: complex
     contains:
         id:
-            description: ID of the Volume
+            description: ID of the volume
             type: int
             returned: Always
             sample: 12345
         name:
-            description: Name of the Volume
-            type: str
+            description: Name of the volume
+            type: string
             returned: Always
             sample: my-volume
         size:
-            description: Size in GB of the Volume
+            description: Size in MB of the volume
             type: int
             returned: Always
             sample: 1337
-        linux_device:
-            description: Path to the device that contains the Volume.
-            returned: always
-            type: str
-            sample: /dev/disk/by-id/scsi-0HC_Volume_12345
-            version_added: "2.10"
         location:
-            description: Location name where the Volume is located at
-            type: str
+            description: Location name where the volume is located at
+            type: string
             returned: Always
             sample: "fsn1"
         labels:
@@ -154,16 +143,10 @@ hcloud_volume:
                 key: value
                 mylabel: 123
         server:
-            description: Server name where the Volume is attached to
-            type: str
+            description: Server name where the volume is attached to
+            type: string
             returned: Always
             sample: "my-server"
-        delete_protection:
-            description: True if Volume is protected for deletion
-            type: bool
-            returned: always
-            sample: false
-            version_added: "2.10"
 """
 
 from ansible.module_utils.basic import AnsibleModule
@@ -195,8 +178,6 @@ class AnsibleHcloudVolume(Hcloud):
             "location": to_native(self.hcloud_volume.location.name),
             "labels": self.hcloud_volume.labels,
             "server": to_native(server_name),
-            "linux_device": to_native(self.hcloud_volume.linux_device),
-            "delete_protection": self.hcloud_volume.protection["delete"],
         }
 
     def _get_volume(self):
@@ -239,45 +220,36 @@ class AnsibleHcloudVolume(Hcloud):
         self._get_volume()
 
     def _update_volume(self):
-        try:
-            size = self.module.params.get("size")
-            if size:
-                if self.hcloud_volume.size < size:
-                    if not self.module.check_mode:
-                        self.hcloud_volume.resize(size).wait_until_finished()
-                    self._mark_as_changed()
-                elif self.hcloud_volume.size > size:
-                    self.module.warn("Shrinking of volumes is not supported")
-
-            server_name = self.module.params.get("server")
-            if server_name:
-                server = self.client.servers.get_by_name(server_name)
-                if self.hcloud_volume.server is None or self.hcloud_volume.server.name != server.name:
-                    if not self.module.check_mode:
-                        automount = self.module.params.get("automount", False)
-                        self.hcloud_volume.attach(server, automount=automount).wait_until_finished()
-                    self._mark_as_changed()
-            else:
-                if self.hcloud_volume.server is not None:
-                    if not self.module.check_mode:
-                        self.hcloud_volume.detach().wait_until_finished()
-                    self._mark_as_changed()
-
-            labels = self.module.params.get("labels")
-            if labels is not None and labels != self.hcloud_volume.labels:
+        size = self.module.params.get("size")
+        if size:
+            if self.hcloud_volume.size < size:
                 if not self.module.check_mode:
-                    self.hcloud_volume.update(labels=labels)
+                    self.hcloud_volume.resize(size).wait_until_finished()
+                self._mark_as_changed()
+            elif self.hcloud_volume.size > size:
+                self.module.warn("Shrinking of volumes is not supported")
+
+        server_name = self.module.params.get("server")
+        if server_name:
+            server = self.client.servers.get_by_name(server_name)
+            if self.hcloud_volume.server is None or self.hcloud_volume.server.name != server.name:
+                if not self.module.check_mode:
+                    automount = self.module.params.get("automount", False)
+                    self.hcloud_volume.attach(server, automount=automount).wait_until_finished()
+                self._mark_as_changed()
+        else:
+            if self.hcloud_volume.server is not None:
+                if not self.module.check_mode:
+                    self.hcloud_volume.detach().wait_until_finished()
                 self._mark_as_changed()
 
-            delete_protection = self.module.params.get("delete_protection")
-            if delete_protection is not None and delete_protection != self.hcloud_volume.protection["delete"]:
-                if not self.module.check_mode:
-                    self.hcloud_volume.change_protection(delete=delete_protection).wait_until_finished()
-                self._mark_as_changed()
+        labels = self.module.params.get("labels")
+        if labels is not None and labels != self.hcloud_volume.labels:
+            if not self.module.check_mode:
+                self.hcloud_volume.update(labels=labels)
+            self._mark_as_changed()
 
-            self._get_volume()
-        except hcloud.APIException as e:
-            self.module.fail_json(msg=e.message)
+        self._get_volume()
 
     def present_volume(self):
         self._get_volume()
@@ -287,15 +259,12 @@ class AnsibleHcloudVolume(Hcloud):
             self._update_volume()
 
     def delete_volume(self):
-        try:
-            self._get_volume()
-            if self.hcloud_volume is not None:
-                if not self.module.check_mode:
-                    self.client.volumes.delete(self.hcloud_volume)
-                self._mark_as_changed()
-            self.hcloud_volume = None
-        except hcloud.APIException as e:
-            self.module.fail_json(msg=e.message)
+        self._get_volume()
+        if self.hcloud_volume is not None:
+            if not self.module.check_mode:
+                self.client.volumes.delete(self.hcloud_volume)
+            self._mark_as_changed()
+        self.hcloud_volume = None
 
     @staticmethod
     def define_module():
@@ -311,7 +280,6 @@ class AnsibleHcloudVolume(Hcloud):
                 format={"type": "str",
                         "choices": ['xfs', 'ext4'],
                         },
-                delete_protection={"type": "bool"},
                 state={
                     "choices": ["absent", "present"],
                     "default": "present",

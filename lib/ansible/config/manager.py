@@ -29,7 +29,6 @@ from ansible.module_utils.six import PY3, string_types
 from ansible.module_utils.six.moves import configparser
 from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.parsing.quoting import unquote
-from ansible.parsing.yaml.objects import AnsibleVaultEncryptedUnicode
 from ansible.utils import py3compat
 from ansible.utils.path import cleanup_tmp_file, makedirs_safe, unfrackpath
 
@@ -152,7 +151,7 @@ def ensure_type(value, value_type, origin=None):
 
         # defaults to string type
         elif isinstance(value, string_types):
-            value = unquote(to_text(value, errors='surrogate_or_strict'))
+            value = unquote(value)
 
         if errmsg:
             raise ValueError('Invalid type provided for "%s": %s' % (errmsg, to_native(value)))
@@ -391,16 +390,8 @@ class ConfigManager(object):
         origin = None
         for entry in entry_list:
             name = entry.get('name')
-            try:
-                temp_value = container.get(name, None)
-            except UnicodeEncodeError:
-                self.WARNINGS.add(u'value for config entry {0} contains invalid characters, ignoring...'.format(to_text(name)))
-                continue
-            if temp_value is not None:  # only set if entry is defined in container
-                # inline vault variables should be converted to a text string
-                if isinstance(temp_value, AnsibleVaultEncryptedUnicode):
-                    temp_value = to_text(temp_value, errors='surrogate_or_strict')
-
+            temp_value = container.get(name, None)
+            if temp_value is not None:  # only set if env var is defined
                 value = temp_value
                 origin = name
 

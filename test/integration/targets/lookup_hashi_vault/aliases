@@ -2,4 +2,3 @@ shippable/posix/group2
 destructive
 needs/target/setup_openssl
 needs/file/test/lib/ansible_test/_data/requirements/constraints.txt
-skip/aix

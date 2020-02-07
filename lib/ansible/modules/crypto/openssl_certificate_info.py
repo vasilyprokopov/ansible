@@ -34,14 +34,8 @@ options:
     path:
         description:
             - Remote absolute path where the certificate file is loaded from.
-            - Either I(path) or I(content) must be specified, but not both.
         type: path
-    content:
-        description:
-            - Content of the X.509 certificate in PEM format.
-            - Either I(path) or I(content) must be specified, but not both.
-        type: str
-        version_added: "2.10"
+        required: true
     valid_at:
         description:
             - A dict of names mapping to time specifications. Every time specified here
@@ -122,7 +116,6 @@ basic_constraints:
     description: Entries in the C(basic_constraints) extension, or C(none) if extension is not present.
     returned: success
     type: list
-    elements: str
     sample: "[CA:TRUE, pathlen:1]"
 basic_constraints_critical:
     description: Whether the C(basic_constraints) extension is critical.
@@ -132,7 +125,6 @@ extended_key_usage:
     description: Entries in the C(extended_key_usage) extension, or C(none) if extension is not present.
     returned: success
     type: list
-    elements: str
     sample: "[Biometric Info, DVCS, Time Stamping]"
 extended_key_usage_critical:
     description: Whether the C(extended_key_usage) extension is critical.
@@ -141,7 +133,7 @@ extended_key_usage_critical:
 extensions_by_oid:
     description: Returns a dictionary for every extension OID
     returned: success
-    type: dict
+    type: complex
     contains:
         critical:
             description: Whether the extension is critical.
@@ -166,7 +158,6 @@ subject_alt_name:
     description: Entries in the C(subject_alt_name) extension, or C(none) if extension is not present.
     returned: success
     type: list
-    elements: str
     sample: "[DNS:www.ansible.com, IP:1.2.3.4]"
 subject_alt_name_critical:
     description: Whether the C(subject_alt_name) extension is critical.
@@ -191,7 +182,6 @@ issuer_ordered:
     description: The certificate's issuer as an ordered list of tuples.
     returned: success
     type: list
-    elements: list
     sample: '[["organizationName", "Ansible"], ["commonName": "ca.example.com"]]'
     version_added: "2.9"
 subject:
@@ -205,7 +195,6 @@ subject_ordered:
     description: The certificate's subject as an ordered list of tuples.
     returned: success
     type: list
-    elements: list
     sample: '[["commonName", "www.example.com"], ["emailAddress": "test@example.com"]]'
     version_added: "2.9"
 not_after:
@@ -276,7 +265,6 @@ authority_cert_issuer:
         - Is C(none) if the C(AuthorityKeyIdentifier) extension is not present.
     returned: success and if the pyOpenSSL backend is I(not) used
     type: list
-    elements: str
     sample: "[DNS:www.ansible.com, IP:1.2.3.4]"
     version_added: "2.9"
 authority_cert_serial_number:
@@ -376,16 +364,13 @@ def get_relative_time_option(input_string, input_name):
 class CertificateInfo(crypto_utils.OpenSSLObject):
     def __init__(self, module, backend):
         super(CertificateInfo, self).__init__(
-            module.params['path'] or '',
+            module.params['path'],
             'present',
             False,
             module.check_mode,
         )
         self.backend = backend
         self.module = module
-        self.content = module.params['content']
-        if self.content is not None:
-            self.content = self.content.encode('utf-8')
 
         self.valid_at = module.params['valid_at']
         if self.valid_at:
@@ -474,7 +459,7 @@ class CertificateInfo(crypto_utils.OpenSSLObject):
 
     def get_info(self):
         result = dict()
-        self.cert = crypto_utils.load_certificate(self.path, content=self.content, backend=self.backend)
+        self.cert = crypto_utils.load_certificate(self.path, backend=self.backend)
 
         result['signature_algorithm'] = self._get_signature_algorithm()
         subject = self._get_subject_ordered()
@@ -819,28 +804,20 @@ class CertificateInfoPyOpenSSL(CertificateInfo):
 def main():
     module = AnsibleModule(
         argument_spec=dict(
-            path=dict(type='path'),
-            content=dict(type='str'),
+            path=dict(type='path', required=True),
             valid_at=dict(type='dict'),
             select_crypto_backend=dict(type='str', default='auto', choices=['auto', 'cryptography', 'pyopenssl']),
-        ),
-        required_one_of=(
-            ['path', 'content'],
-        ),
-        mutually_exclusive=(
-            ['path', 'content'],
         ),
         supports_check_mode=True,
     )
 
     try:
-        if module.params['path'] is not None:
-            base_dir = os.path.dirname(module.params['path']) or '.'
-            if not os.path.isdir(base_dir):
-                module.fail_json(
-                    name=base_dir,
-                    msg='The directory %s does not exist or the file is not a directory' % base_dir
-                )
+        base_dir = os.path.dirname(module.params['path']) or '.'
+        if not os.path.isdir(base_dir):
+            module.fail_json(
+                name=base_dir,
+                msg='The directory %s does not exist or the file is not a directory' % base_dir
+            )
 
         backend = module.params['select_crypto_backend']
         if backend == 'auto':

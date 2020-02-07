@@ -327,7 +327,7 @@ options:
                     - Frontend port resource of an application gateway.
             protocol:
                 description:
-                    - Protocol of the C(http) listener.
+                    - Protocol of the c(http) listener.
                 choices:
                     - 'http'
                     - 'https'

@@ -35,7 +35,7 @@ options:
     suboptions:
       name:
         description:
-          - Interface name.
+          - Intrface name.
         required: true
       area:
         description:

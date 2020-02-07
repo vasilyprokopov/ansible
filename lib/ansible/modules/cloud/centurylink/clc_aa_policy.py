@@ -35,7 +35,9 @@ options:
     choices: ['present','absent']
   wait:
     description:
-      - This option does nothing and will be removed in Ansible 2.14.
+      - Whether to wait for the tasks to finish before returning.
+    default: True
+    required: False
     type: bool
 requirements:
     - python = 2.7
@@ -189,7 +191,7 @@ class ClcAntiAffinityPolicy:
         argument_spec = dict(
             name=dict(required=True),
             location=dict(required=True),
-            wait=dict(type='bool', removed_in_version='2.14'),
+            wait=dict(default=True),
             state=dict(default='present', choices=['present', 'absent']),
         )
         return argument_spec

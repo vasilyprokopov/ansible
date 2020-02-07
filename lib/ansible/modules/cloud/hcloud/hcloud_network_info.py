@@ -69,7 +69,7 @@ hcloud_network_info:
             description: Name of the network
             returned: always
             type: str
-            sample: awesome-network
+            sample: awsome-network
         ip_range:
             description: IP range of the network
             returned: always
@@ -87,11 +87,6 @@ hcloud_network_info:
             description: Servers attached to the network
             returned: always
             type: complex
-        delete_protection:
-            description: True if the network is protected for deletion
-            returned: always
-            type: bool
-            version_added: "2.10"
         labels:
             description: Labels of the network
             returned: always
@@ -161,7 +156,6 @@ class AnsibleHcloudNetworkInfo(Hcloud):
                     "routes": routes,
                     "servers": servers,
                     "labels": network.labels,
-                    "delete_protection": network.protection["delete"],
                 })
         return tmp
 

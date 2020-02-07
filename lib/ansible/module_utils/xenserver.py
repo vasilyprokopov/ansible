@@ -9,17 +9,15 @@ __metaclass__ = type
 import atexit
 import time
 import re
-import traceback
 
-XENAPI_IMP_ERR = None
+HAS_XENAPI = False
 try:
     import XenAPI
     HAS_XENAPI = True
 except ImportError:
-    HAS_XENAPI = False
-    XENAPI_IMP_ERR = traceback.format_exc()
+    pass
 
-from ansible.module_utils.basic import env_fallback, missing_required_lib
+from ansible.module_utils.basic import env_fallback
 from ansible.module_utils.common.network import is_mac
 from ansible.module_utils.ansible_release import __version__ as ANSIBLE_VERSION
 
@@ -849,7 +847,9 @@ class XenServerObject(object):
             module: Reference to Ansible module object.
         """
         if not HAS_XENAPI:
-            module.fail_json(changed=False, msg=missing_required_lib("XenAPI"), exception=XENAPI_IMP_ERR)
+            module.fail_json(changed=False, msg=("XenAPI Python library is required for this module! "
+                                                 "Please download XenServer SDK and copy XenAPI.py to your Python site-packages. "
+                                                 "Check Notes section in module documentation for more info."))
 
         self.module = module
         self.xapi_session = XAPI.connect(module)

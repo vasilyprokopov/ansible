@@ -65,7 +65,7 @@ from ansible.module_utils.common.process import get_bin_path
 class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
     NAME = 'nmap'
-    find_host = re.compile(r'^Nmap scan report for ([\w,.,-]+)(?: \(([\w,.,:,\[,\]]+)\))?')
+    find_host = re.compile(r'^Nmap scan report for ([\w,.,-]+) \(([\w,.,:,\[,\]]+)\)')
     find_port = re.compile(r'^(\d+)/(\w+)\s+(\w+)\s+(\w+)')
 
     def __init__(self):
@@ -86,9 +86,12 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
     def parse(self, inventory, loader, path, cache=False):
 
         try:
-            self._nmap = get_bin_path('nmap')
+            self._nmap = get_bin_path('nmap', True)
         except ValueError as e:
-            raise AnsibleParserError('nmap inventory plugin requires the nmap cli tool to work: {0}'.format(to_native(e)))
+            raise AnsibleParserError(e)
+
+        if self._nmap is None:
+            raise AnsibleParserError('nmap inventory plugin requires the nmap cli tool to work')
 
         super(InventoryModule, self).parse(inventory, loader, path, cache=cache)
 
@@ -140,11 +143,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                     else:
                         host = hits.group(1)
 
-                    # if no reverse dns exists, just use ip instead as hostname
-                    if hits.group(2) is not None:
-                        ip = hits.group(2)
-                    else:
-                        ip = hits.group(1)
+                    ip = hits.group(2)
 
                     if host is not None:
                         # update inventory

@@ -18,22 +18,13 @@ class AzureRMModuleBaseExt(AzureRMModuleBase):
         for name in spec.keys():
             # first check if option was passed
             param = body.get(name)
-            if param is None:
-                if spec[name].get('purgeIfNone', False):
-                    body.pop(name, None)
+            if not param:
                 continue
             # check if pattern needs to be used
             pattern = spec[name].get('pattern', None)
             if pattern:
                 if pattern == 'camelize':
                     param = _snake_to_camel(param, True)
-                elif isinstance(pattern, list):
-                    normalized = None
-                    for p in pattern:
-                        normalized = self.normalize_resource_id(param, p)
-                        body[name] = normalized
-                        if normalized is not None:
-                            break
                 else:
                     param = self.normalize_resource_id(param, pattern)
                     body[name] = param

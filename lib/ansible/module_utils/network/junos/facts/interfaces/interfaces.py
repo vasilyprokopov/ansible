@@ -105,7 +105,7 @@ class InterfacesFacts(object):
         config['hold_time']['up'] = utils.get_xml_conf_arg(conf, 'hold-time/up')
         disable = utils.get_xml_conf_arg(conf, 'disable', data='tag')
         if disable:
-            config['enabled'] = False
+            config['enable'] = False
         else:
-            config['enabled'] = True
+            config['enable'] = True
         return utils.remove_empties(config)

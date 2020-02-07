@@ -325,9 +325,7 @@ options:
     restore_time:
         description:
           - If using I(creation_source=instance) this indicates the UTC date and time to restore from the source instance.
-            For example, "2009-09-07T23:45:00Z".
-          - May alternatively set I(use_latest_restore_time=True).
-          - Only one of I(use_latest_restorable_time) and I(restore_time) may be provided.
+            For example, "2009-09-07T23:45:00Z". May alternatively set c(use_latest_restore_time) to True.
         type: str
     s3_bucket_name:
         description:
@@ -408,8 +406,8 @@ options:
         type: str
     use_latest_restorable_time:
         description:
-          - Whether to restore the DB instance to the latest restorable backup time.
-          - Only one of I(use_latest_restorable_time) and I(restore_time) may be provided.
+          - Whether to restore the DB instance to the latest restorable backup time. Only one of I(use_latest_restorable_time)
+            and I(restore_to_time) may be provided.
         type: bool
         aliases:
           - restore_from_latest
@@ -1155,7 +1153,7 @@ def main():
     ]
     mutually_exclusive = [
         ('s3_bucket_name', 'source_db_instance_identifier', 'snapshot_identifier'),
-        ('use_latest_restorable_time', 'restore_time'),
+        ('use_latest_restorable_time', 'restore_to_time'),
         ('availability_zone', 'multi_az'),
     ]
 

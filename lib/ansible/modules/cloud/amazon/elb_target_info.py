@@ -191,13 +191,11 @@ instance_target_groups:
                             returned: if I(state!=present)
                             sample:
                                 - "Target desregistration is in progress"
-                            type: str
                         reason:
                             description: reason code for target health
                             returned: if I(state!=healthy)
                             sample:
                                 - "Target.Deregistration in progress"
-                            type: str
                         state:
                             description: health state
                             returned: always
@@ -208,7 +206,6 @@ instance_target_groups:
                                 - "unhealthy"
                                 - "unused"
                                 - "unavailable"
-                            type: str
 """
 
 __metaclass__ = type
@@ -220,7 +217,8 @@ except ImportError:
     pass
 
 from ansible.module_utils.aws.core import AnsibleAWSModule
-from ansible.module_utils.ec2 import camel_dict_to_snake_dict, AWSRetry
+from ansible.module_utils.ec2 import (HAS_BOTO3, camel_dict_to_snake_dict,
+                                      AWSRetry)
 
 
 class Target(object):

@@ -25,7 +25,6 @@ __metaclass__ = type
 import argparse
 import json
 import os
-
 import requests
 
 try:
@@ -36,12 +35,6 @@ except ImportError:
 
 def main():
     """Main program body."""
-    args = parse_args()
-    start_run(args)
-
-
-def parse_args():
-    """Parse and return args."""
     api_key = get_api_key()
 
     parser = argparse.ArgumentParser(description='Start a new Shippable run.')
@@ -76,11 +69,6 @@ def parse_args():
 
     args = parser.parse_args()
 
-    return args
-
-
-def start_run(args):
-    """Start a new Shippable run."""
     headers = dict(
         Authorization='apiToken %s' % args.key,
     )

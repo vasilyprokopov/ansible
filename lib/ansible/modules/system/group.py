@@ -74,35 +74,10 @@ EXAMPLES = '''
     state: present
 '''
 
-RETURN = r'''
-gid:
-  description: Group ID of the group.
-  returned: When C(state) is 'present'
-  type: int
-  sample: 1001
-name:
-  description: Group name
-  returned: always
-  type: str
-  sample: users
-state:
-  description: Whether the group is present or not
-  returned: always
-  type: str
-  sample: 'absent'
-system:
-  description: Whether the group is a system group or not
-  returned: When C(state) is 'present'
-  type: bool
-  sample: False
-'''
-
 import grp
-import os
 
 from ansible.module_utils._text import to_bytes
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.common.sys_info import get_platform_subclass
+from ansible.module_utils.basic import AnsibleModule, load_platform_subclass
 
 
 class Group(object):
@@ -123,8 +98,7 @@ class Group(object):
     GROUPFILE = '/etc/group'
 
     def __new__(cls, *args, **kwargs):
-        new_cls = get_platform_subclass(Group)
-        return super(cls, new_cls).__new__(new_cls)
+        return load_platform_subclass(Group, args, kwargs)
 
     def __init__(self, module):
         self.module = module
@@ -193,36 +167,11 @@ class Group(object):
         return self.execute_command(cmd)
 
     def group_exists(self):
-        # The grp module does not distinguish between local and directory accounts.
-        # It's output cannot be used to determine whether or not a group exists locally.
-        # It returns True if the group exists locally or in the directory, so instead
-        # look in the local GROUP file for an existing account.
-        if self.local:
-            if not os.path.exists(self.GROUPFILE):
-                self.module.fail_json(msg="'local: true' specified but unable to find local group file {0} to parse.".format(self.GROUPFILE))
-
-            exists = False
-            name_test = '{0}:'.format(self.name)
-            with open(self.GROUPFILE, 'rb') as f:
-                reversed_lines = f.readlines()[::-1]
-                for line in reversed_lines:
-                    if line.startswith(to_bytes(name_test)):
-                        exists = True
-                        break
-
-            if not exists:
-                self.module.warn(
-                    "'local: true' specified and group was not found in {file}. "
-                    "The local group may already exist if the local group database exists somewhere other than {file}.".format(file=self.GROUPFILE))
-
-            return exists
-
-        else:
-            try:
-                if grp.getgrnam(self.name):
-                    return True
-            except KeyError:
-                return False
+        try:
+            if grp.getgrnam(self.name):
+                return True
+        except KeyError:
+            return False
 
     def group_info(self):
         if not self.group_exists():

@@ -7,7 +7,7 @@
 - set_fact:
     expected_deleted_output:
       - name: fxp0
-        enabled: true
+        enable: true
 
 - block:
     - name: Configure initial state for interface
@@ -17,7 +17,7 @@
             description: "Configured by Ansible - Interface 1"
             mtu: 1024
             speed: 100m
-            enabled: False
+            enable: False
             duplex: full-duplex
             hold_time:
               up: 2000

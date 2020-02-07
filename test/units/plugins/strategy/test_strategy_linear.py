@@ -21,6 +21,12 @@ from units.mock.path import mock_unfrackpath_noop
 
 class TestStrategyLinear(unittest.TestCase):
 
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
     @patch('ansible.playbook.role.definition.unfrackpath', mock_unfrackpath_noop)
     def test_noop(self):
         fake_loader = DictDataLoader({

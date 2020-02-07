@@ -61,10 +61,6 @@ options:
     description:
      - Comment for C(downtime) action.
     default: Scheduling downtime
-  start:
-    version_added: "2.10"
-    description:
-      - When downtime should start, in time_t format (epoch seconds).
   minutes:
     description:
       - Minutes to schedule downtime for.
@@ -104,14 +100,6 @@ EXAMPLES = '''
 # schedule an hour of HOST downtime
 - nagios:
     action: downtime
-    minutes: 60
-    service: host
-    host: '{{ inventory_hostname }}'
-
-# schedule an hour of HOST downtime starting at 2019-04-23T02:00:00+00:00
-- nagios:
-    action: downtime
-    start: 1555984800
     minutes: 60
     service: host
     host: '{{ inventory_hostname }}'
@@ -273,7 +261,6 @@ def main():
             comment=dict(default='Scheduling downtime'),
             host=dict(required=False, default=None),
             servicegroup=dict(required=False, default=None),
-            start=dict(required=False, default=None),
             minutes=dict(default=30, type='int'),
             cmdfile=dict(default=which_cmdfile()),
             services=dict(default=None, aliases=['service']),
@@ -284,7 +271,6 @@ def main():
     action = module.params['action']
     host = module.params['host']
     servicegroup = module.params['servicegroup']
-    start = module.params['start']
     services = module.params['services']
     cmdfile = module.params['cmdfile']
     command = module.params['command']
@@ -366,7 +352,6 @@ class Nagios(object):
         self.comment = kwargs['comment']
         self.host = kwargs['host']
         self.servicegroup = kwargs['servicegroup']
-        self.start = int(kwargs['start'])
         self.minutes = kwargs['minutes']
         self.cmdfile = kwargs['cmdfile']
         self.command = kwargs['command']
@@ -522,7 +507,7 @@ class Nagios(object):
 
         return notif_str
 
-    def schedule_svc_downtime(self, host, services=None, minutes=30, start=None):
+    def schedule_svc_downtime(self, host, services=None, minutes=30):
         """
         This command is used to schedule downtime for a particular
         service.
@@ -541,10 +526,10 @@ class Nagios(object):
             services = []
 
         for service in services:
-            dt_cmd_str = self._fmt_dt_str(cmd, host, minutes, start=start, svc=service)
+            dt_cmd_str = self._fmt_dt_str(cmd, host, minutes, svc=service)
             self._write_command(dt_cmd_str)
 
-    def schedule_host_downtime(self, host, minutes=30, start=None):
+    def schedule_host_downtime(self, host, minutes=30):
         """
         This command is used to schedule downtime for a particular
         host.
@@ -557,10 +542,10 @@ class Nagios(object):
         """
 
         cmd = "SCHEDULE_HOST_DOWNTIME"
-        dt_cmd_str = self._fmt_dt_str(cmd, host, minutes, start=start)
+        dt_cmd_str = self._fmt_dt_str(cmd, host, minutes)
         self._write_command(dt_cmd_str)
 
-    def schedule_host_svc_downtime(self, host, minutes=30, start=None):
+    def schedule_host_svc_downtime(self, host, minutes=30):
         """
         This command is used to schedule downtime for
         all services associated with a particular host.
@@ -573,7 +558,7 @@ class Nagios(object):
         """
 
         cmd = "SCHEDULE_HOST_SVC_DOWNTIME"
-        dt_cmd_str = self._fmt_dt_str(cmd, host, minutes, start=start)
+        dt_cmd_str = self._fmt_dt_str(cmd, host, minutes)
         self._write_command(dt_cmd_str)
 
     def delete_host_downtime(self, host, services=None, comment=None):
@@ -595,7 +580,7 @@ class Nagios(object):
                 dt_del_cmd_str = self._fmt_dt_del_str(cmd, host, svc=service, comment=comment)
                 self._write_command(dt_del_cmd_str)
 
-    def schedule_hostgroup_host_downtime(self, hostgroup, minutes=30, start=None):
+    def schedule_hostgroup_host_downtime(self, hostgroup, minutes=30):
         """
         This command is used to schedule downtime for all hosts in a
         particular hostgroup.
@@ -608,10 +593,10 @@ class Nagios(object):
         """
 
         cmd = "SCHEDULE_HOSTGROUP_HOST_DOWNTIME"
-        dt_cmd_str = self._fmt_dt_str(cmd, hostgroup, minutes, start=start)
+        dt_cmd_str = self._fmt_dt_str(cmd, hostgroup, minutes)
         self._write_command(dt_cmd_str)
 
-    def schedule_hostgroup_svc_downtime(self, hostgroup, minutes=30, start=None):
+    def schedule_hostgroup_svc_downtime(self, hostgroup, minutes=30):
         """
         This command is used to schedule downtime for all services in
         a particular hostgroup.
@@ -628,10 +613,10 @@ class Nagios(object):
         """
 
         cmd = "SCHEDULE_HOSTGROUP_SVC_DOWNTIME"
-        dt_cmd_str = self._fmt_dt_str(cmd, hostgroup, minutes, start=start)
+        dt_cmd_str = self._fmt_dt_str(cmd, hostgroup, minutes)
         self._write_command(dt_cmd_str)
 
-    def schedule_servicegroup_host_downtime(self, servicegroup, minutes=30, start=None):
+    def schedule_servicegroup_host_downtime(self, servicegroup, minutes=30):
         """
         This command is used to schedule downtime for all hosts in a
         particular servicegroup.
@@ -645,10 +630,10 @@ class Nagios(object):
         """
 
         cmd = "SCHEDULE_SERVICEGROUP_HOST_DOWNTIME"
-        dt_cmd_str = self._fmt_dt_str(cmd, servicegroup, minutes, start=start)
+        dt_cmd_str = self._fmt_dt_str(cmd, servicegroup, minutes)
         self._write_command(dt_cmd_str)
 
-    def schedule_servicegroup_svc_downtime(self, servicegroup, minutes=30, start=None):
+    def schedule_servicegroup_svc_downtime(self, servicegroup, minutes=30):
         """
         This command is used to schedule downtime for all services in
         a particular servicegroup.
@@ -666,7 +651,7 @@ class Nagios(object):
         """
 
         cmd = "SCHEDULE_SERVICEGROUP_SVC_DOWNTIME"
-        dt_cmd_str = self._fmt_dt_str(cmd, servicegroup, minutes, start=start)
+        dt_cmd_str = self._fmt_dt_str(cmd, servicegroup, minutes)
         self._write_command(dt_cmd_str)
 
     def disable_host_svc_notifications(self, host):
@@ -1017,16 +1002,13 @@ class Nagios(object):
         # host or service downtime?
         if self.action == 'downtime':
             if self.services == 'host':
-                self.schedule_host_downtime(self.host, minutes=self.minutes,
-                                            start=self.start)
+                self.schedule_host_downtime(self.host, self.minutes)
             elif self.services == 'all':
-                self.schedule_host_svc_downtime(self.host, minutes=self.minutes,
-                                                start=self.start)
+                self.schedule_host_svc_downtime(self.host, self.minutes)
             else:
                 self.schedule_svc_downtime(self.host,
                                            services=self.services,
-                                           minutes=self.minutes,
-                                           start=self.start)
+                                           minutes=self.minutes)
 
         elif self.action == 'delete_downtime':
             if self.services == 'host':
@@ -1038,10 +1020,10 @@ class Nagios(object):
 
         elif self.action == "servicegroup_host_downtime":
             if self.servicegroup:
-                self.schedule_servicegroup_host_downtime(servicegroup=self.servicegroup, minutes=self.minutes, start=self.start)
+                self.schedule_servicegroup_host_downtime(servicegroup=self.servicegroup, minutes=self.minutes)
         elif self.action == "servicegroup_service_downtime":
             if self.servicegroup:
-                self.schedule_servicegroup_svc_downtime(servicegroup=self.servicegroup, minutes=self.minutes, start=self.start)
+                self.schedule_servicegroup_svc_downtime(servicegroup=self.servicegroup, minutes=self.minutes)
 
         # toggle the host AND service alerts
         elif self.action == 'silence':

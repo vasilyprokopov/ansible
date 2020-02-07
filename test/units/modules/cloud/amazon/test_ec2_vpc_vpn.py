@@ -1,8 +1,19 @@
 # (c) 2017 Red Hat Inc.
-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+#
+# This file is part of Ansible
+#
+# Ansible is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Ansible is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
 import pytest
 import os
@@ -154,8 +165,8 @@ def test_find_connection_insufficient_filters(placeboify, maybe_sleep):
     params2 = make_params(cgw[1], vgw[1], tags={'Correct': 'Tag'})
     m, conn = setup_mod_conn(placeboify, params)
     m2, conn2 = setup_mod_conn(placeboify, params2)
-    vpn1 = ec2_vpc_vpn.ensure_present(conn, m.params)[1]
-    vpn2 = ec2_vpc_vpn.ensure_present(conn2, m2.params)[1]
+    _, vpn1 = ec2_vpc_vpn.ensure_present(conn, m.params)
+    _, vpn2 = ec2_vpc_vpn.ensure_present(conn2, m2.params)
 
     # reset the parameters so only filtering by tags will occur
     m.params = {'filters': {'tags': {'Correct': 'Tag'}}}
@@ -343,7 +354,7 @@ def setup_req(placeboify, number_of_results=1):
     for each in range(0, number_of_results):
         params = make_params(cgw[each], vgw[each])
         m, conn = setup_mod_conn(placeboify, params)
-        vpn = ec2_vpc_vpn.ensure_present(conn, params)[1]
+        _, vpn = ec2_vpc_vpn.ensure_present(conn, params)
 
         results.append({'module': m, 'connection': conn, 'vpn': vpn, 'params': params})
     if number_of_results == 1:

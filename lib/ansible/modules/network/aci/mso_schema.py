@@ -131,10 +131,10 @@ def main():
         ],
     )
 
-    schema = module.params.get('schema')
-    templates = module.params.get('templates')
-    sites = module.params.get('sites')
-    state = module.params.get('state')
+    schema = module.params['schema']
+    templates = module.params['templates']
+    sites = module.params['sites']
+    state = module.params['state']
 
     mso = MSOModule(module)
 
@@ -145,7 +145,7 @@ def main():
     if schema:
         mso.existing = mso.get_obj(path, displayName=schema)
         if mso.existing:
-            schema_id = mso.existing.get('id')
+            schema_id = mso.existing['id']
             path = 'schemas/{id}'.format(id=schema_id)
     else:
         mso.existing = mso.query_objs(path)

@@ -1,10 +1,18 @@
 #!/usr/bin/python
 # This file is part of Ansible
-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
-
+#
+# Ansible is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Ansible is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['stableinterface'],
@@ -15,7 +23,7 @@ DOCUMENTATION = '''
 module: route53_zone
 short_description: add or delete Route53 zones
 description:
-    - Creates and deletes Route53 private and public zones.
+    - Creates and deletes Route53 private and public zones
 version_added: "2.0"
 requirements: [ boto3 ]
 options:
@@ -23,38 +31,31 @@ options:
         description:
             - "The DNS zone record (eg: foo.com.)"
         required: true
-        type: str
     state:
         description:
-            - Whether or not the zone should exist or not.
+            - whether or not the zone should exist or not
         default: present
         choices: [ "present", "absent" ]
-        type: str
     vpc_id:
         description:
-            - The VPC ID the zone should be a part of (if this is going to be a private zone).
-        type: str
+            - The VPC ID the zone should be a part of (if this is going to be a private zone)
     vpc_region:
         description:
-            - The VPC Region the zone should be a part of (if this is going to be a private zone).
-        type: str
+            - The VPC Region the zone should be a part of (if this is going to be a private zone)
     comment:
         description:
-            - Comment associated with the zone.
+            - Comment associated with the zone
         default: ''
-        type: str
     hosted_zone_id:
         description:
             - The unique zone identifier you want to delete or "all" if there are many zones with the same domain name.
-            - Required if there are multiple zones identified with the above options.
+              Required if there are multiple zones identified with the above options
         version_added: 2.4
-        type: str
     delegation_set_id:
         description:
             - The reusable delegation set ID to be associated with the zone.
-            - Note that you can't associate a reusable delegation set with a private hosted zone.
+              Note that you can't associate a reusable delegation set with a private hosted zone.
         version_added: 2.6
-        type: str
 extends_documentation_fragment:
     - aws
     - ec2
@@ -126,11 +127,12 @@ delegation_set_id:
 
 import time
 from ansible.module_utils.aws.core import AnsibleAWSModule
+from ansible.module_utils.ec2 import boto3_conn, ec2_argument_spec, get_aws_connection_info
 
 try:
     from botocore.exceptions import BotoCoreError, ClientError
 except ImportError:
-    pass  # caught by AnsibleAWSModule
+    pass  # handled by AnsibleAWSModule
 
 
 def find_zones(module, client, zone_in, private_zone):

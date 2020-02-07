@@ -53,11 +53,6 @@ EXAMPLES = '''
   debug:
     var: ansible_facts.packages
 
-- name: Check whether a package called foobar is installed
-  debug:
-    msg: "{{ ansible_facts.packages['foobar'] | length }} versions of foobar are installed!"
-  when: "'foobar' in ansible_facts.packages"
-
 '''
 
 RETURN = '''
@@ -67,55 +62,9 @@ ansible_facts:
   type: complex
   contains:
     packages:
-      description:
-        - Maps the package name to a non-empty list of dicts with package information.
-        - Every dict in the list corresponds to one installed version of the package.
-        - The fields described below are present for all package managers. Depending on the
-          package manager, there might be more fields for a package.
+      description: list of dicts with package information
       returned: when operating system level package manager is specified or auto detected manager
       type: dict
-      contains:
-        name:
-          description: The package's name.
-          returned: always
-          type: str
-        version:
-          description: The package's version.
-          returned: always
-          type: str
-        source:
-          description: Where information on the package came from.
-          returned: always
-          type: str
-      sample: |-
-        {
-          "packages": {
-            "kernel": [
-              {
-                "name": "kernel",
-                "source": "rpm",
-                "version": "3.10.0",
-                ...
-              },
-              {
-                "name": "kernel",
-                "source": "rpm",
-                "version": "3.10.0",
-                ...
-              },
-              ...
-            ],
-            "kernel-tools": [
-              {
-                "name": "kernel-tools",
-                "source": "rpm",
-                "version": "3.10.0",
-                ...
-              }
-            ],
-            ...
-          }
-        }
       sample_rpm:
         {
           "packages": {
@@ -229,14 +178,8 @@ class RPM(LibMgr):
     def is_available(self):
         ''' we expect the python bindings installed, but this gives warning if they are missing and we have rpm cli'''
         we_have_lib = super(RPM, self).is_available()
-
-        try:
-            get_bin_path('rpm')
-            if not we_have_lib:
-                module.warn('Found "rpm" but %s' % (missing_required_lib('rpm')))
-        except ValueError:
-            pass
-
+        if not we_have_lib and get_bin_path('rpm'):
+            self.warnings.append('Found "rpm" but %s' % (missing_required_lib('rpm')))
         return we_have_lib
 
 
@@ -261,12 +204,8 @@ class APT(LibMgr):
         we_have_lib = super(APT, self).is_available()
         if not we_have_lib:
             for exe in ('apt', 'apt-get', 'aptitude'):
-                try:
-                    get_bin_path(exe)
-                except ValueError:
-                    continue
-                else:
-                    module.warn('Found "%s" but %s' % (exe, missing_required_lib('apt')))
+                if get_bin_path(exe):
+                    self.warnings.append('Found "%s" but %s' % (exe, missing_required_lib('apt')))
                     break
         return we_have_lib
 
@@ -302,7 +241,7 @@ class PKG(CLIMgr):
                 pass
 
         if 'automatic' in pkg:
-            pkg['automatic'] = bool(int(pkg['automatic']))
+            pkg['automatic'] = bool(pkg['automatic'])
 
         if 'category' in pkg:
             pkg['category'] = pkg['category'].split('/', 1)[0]
@@ -319,7 +258,7 @@ class PKG(CLIMgr):
                 pkg['revision'] = '0'
 
         if 'vital' in pkg:
-            pkg['vital'] = bool(int(pkg['vital']))
+            pkg['vital'] = bool(pkg['vital'])
 
         return pkg
 
@@ -391,6 +330,9 @@ def main():
                 if pkgmgr in module.params['manager']:
                     module.warn('Requested package manager %s was not usable by this module: %s' % (pkgmgr, to_text(e)))
                 continue
+
+            for warning in getattr(manager, 'warnings', []):
+                module.warn(warning)
 
         except Exception as e:
             if pkgmgr in module.params['manager']:

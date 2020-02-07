@@ -142,17 +142,10 @@ from ansible.module_utils._text import to_native
 #
 
 def main():
-    tls_map = {}
-
-    try:
-        tls_map['tlsv1.2'] = ssl.PROTOCOL_TLSv1_2
-    except AttributeError:
-        pass
-
-    try:
-        tls_map['tlsv1.1'] = ssl.PROTOCOL_TLSv1_1
-    except AttributeError:
-        pass
+    tls_map = {
+        'tlsv1.2': ssl.PROTOCOL_TLSv1_2,
+        'tlsv1.1': ssl.PROTOCOL_TLSv1_1,
+    }
 
     module = AnsibleModule(
         argument_spec=dict(

@@ -59,11 +59,4 @@ EXAMPLES = '''
   package:
     name: "{{ apache }}"
     state: absent
-
-- name: install the latest version of Apache and MariaDB
-  package:
-    name:
-      - httpd
-      - mariadb-server
-    state: latest
 '''

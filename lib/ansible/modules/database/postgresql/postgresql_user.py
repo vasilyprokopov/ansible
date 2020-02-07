@@ -150,13 +150,7 @@ options:
     description:
     - The list of groups (roles) that need to be granted to the user.
     type: list
-    elements: str
     version_added: '2.9'
-  comment:
-    description:
-    - Add a comment on the user (equal to the COMMENT ON ROLE statement result).
-    type: str
-    version_added: '2.10'
 notes:
 - The module creates a user (role) with login privilege by default.
   Use NOLOGIN role_attr_flags to change this behaviour.
@@ -182,12 +176,6 @@ EXAMPLES = r'''
     password: ceec4eif7ya
     priv: "CONNECT/products:ALL"
     expires: "Jan 31 2020"
-
-- name: Add a comment on django user
-  postgresql_user:
-    db: acme
-    name: django
-    comment: This is a test user
 
 # Connect to default database, create rails user, set its password (MD5-hashed),
 # and grant privilege to create other databases and demote rails from super user status if user exists
@@ -263,6 +251,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.database import pg_quote_identifier, SQLParseError
 from ansible.module_utils.postgres import (
     connect_to_db,
+    exec_sql,
     get_conn_params,
     PgMembership,
     postgres_common_argument_spec,
@@ -313,8 +302,8 @@ def user_add(cursor, user, password, role_attr_flags, encrypted, expires, conn_l
     # Note: role_attr_flags escaped by parse_role_attrs and encrypted is a
     # literal
     query_password_data = dict(password=password, expires=expires)
-    query = ['CREATE USER "%(user)s"' %
-             {"user": user}]
+    query = ['CREATE USER %(user)s' %
+             {"user": pg_quote_identifier(user, 'role')}]
     if password is not None and password != '':
         query.append("WITH %(crypt)s" % {"crypt": encrypted})
         query.append("PASSWORD %(password)s")
@@ -431,7 +420,7 @@ def user_alter(db_connection, module, user, password, role_attr_flags, encrypted
         if not pwchanging and not role_attr_flags_changing and not expires_changing and not conn_limit_changing:
             return False
 
-        alter = ['ALTER USER "%(user)s"' % {"user": user}]
+        alter = ['ALTER USER %(user)s' % {"user": pg_quote_identifier(user, 'role')}]
         if pwchanging:
             if password != '':
                 alter.append("WITH %(crypt)s" % {"crypt": encrypted})
@@ -486,8 +475,8 @@ def user_alter(db_connection, module, user, password, role_attr_flags, encrypted
         if not role_attr_flags_changing:
             return False
 
-        alter = ['ALTER USER "%(user)s"' %
-                 {"user": user}]
+        alter = ['ALTER USER %(user)s' %
+                 {"user": pg_quote_identifier(user, 'role')}]
         if role_attr_flags:
             alter.append('WITH %s' % role_attr_flags)
 
@@ -517,7 +506,7 @@ def user_delete(cursor, user):
     """Try to remove a user. Returns True if successful otherwise False"""
     cursor.execute("SAVEPOINT ansible_pgsql_user_delete")
     try:
-        query = 'DROP USER "%s"' % user
+        query = "DROP USER %s" % pg_quote_identifier(user, 'role')
         executed_queries.append(query)
         cursor.execute(query)
     except Exception:
@@ -552,16 +541,16 @@ def get_table_privileges(cursor, user, table):
     else:
         schema = 'public'
     query = ("SELECT privilege_type FROM information_schema.role_table_grants "
-             "WHERE grantee=%(user)s AND table_name=%(table)s AND table_schema=%(schema)s")
-    cursor.execute(query, {'user': user, 'table': table, 'schema': schema})
+             "WHERE grantee='%s' AND table_name='%s' AND table_schema='%s'" % (user, table, schema))
+    cursor.execute(query)
     return frozenset([x[0] for x in cursor.fetchall()])
 
 
 def grant_table_privileges(cursor, user, table, privs):
     # Note: priv escaped by parse_privs
     privs = ', '.join(privs)
-    query = 'GRANT %s ON TABLE %s TO "%s"' % (
-        privs, pg_quote_identifier(table, 'table'), user)
+    query = 'GRANT %s ON TABLE %s TO %s' % (
+        privs, pg_quote_identifier(table, 'table'), pg_quote_identifier(user, 'role'))
     executed_queries.append(query)
     cursor.execute(query)
 
@@ -569,8 +558,8 @@ def grant_table_privileges(cursor, user, table, privs):
 def revoke_table_privileges(cursor, user, table, privs):
     # Note: priv escaped by parse_privs
     privs = ', '.join(privs)
-    query = 'REVOKE %s ON TABLE %s FROM "%s"' % (
-        privs, pg_quote_identifier(table, 'table'), user)
+    query = 'REVOKE %s ON TABLE %s FROM %s' % (
+        privs, pg_quote_identifier(table, 'table'), pg_quote_identifier(user, 'role'))
     executed_queries.append(query)
     cursor.execute(query)
 
@@ -619,8 +608,9 @@ def grant_database_privileges(cursor, user, db, privs):
         query = 'GRANT %s ON DATABASE %s TO PUBLIC' % (
                 privs, pg_quote_identifier(db, 'database'))
     else:
-        query = 'GRANT %s ON DATABASE %s TO "%s"' % (
-                privs, pg_quote_identifier(db, 'database'), user)
+        query = 'GRANT %s ON DATABASE %s TO %s' % (
+                privs, pg_quote_identifier(db, 'database'),
+                pg_quote_identifier(user, 'role'))
 
     executed_queries.append(query)
     cursor.execute(query)
@@ -633,8 +623,9 @@ def revoke_database_privileges(cursor, user, db, privs):
         query = 'REVOKE %s ON DATABASE %s FROM PUBLIC' % (
                 privs, pg_quote_identifier(db, 'database'))
     else:
-        query = 'REVOKE %s ON DATABASE %s FROM "%s"' % (
-                privs, pg_quote_identifier(db, 'database'), user)
+        query = 'REVOKE %s ON DATABASE %s FROM %s' % (
+                privs, pg_quote_identifier(db, 'database'),
+                pg_quote_identifier(user, 'role'))
 
     executed_queries.append(query)
     cursor.execute(query)
@@ -779,26 +770,6 @@ def get_valid_flags_by_version(cursor):
     ]
 
 
-def get_comment(cursor, user):
-    """Get user's comment."""
-    query = ("SELECT pg_catalog.shobj_description(r.oid, 'pg_authid') "
-             "FROM pg_catalog.pg_roles r "
-             "WHERE r.rolname = %(user)s")
-    cursor.execute(query, {'user': user})
-    return cursor.fetchone()[0]
-
-
-def add_comment(cursor, user, comment):
-    """Add comment on user."""
-    if comment != get_comment(cursor, user):
-        query = 'COMMENT ON ROLE "%s" IS ' % user
-        cursor.execute(query + '%(comment)s', {'comment': comment})
-        executed_queries.append(cursor.mogrify(query + '%(comment)s', {'comment': comment}))
-        return True
-    else:
-        return False
-
-
 # ===========================================
 # Module execution.
 #
@@ -818,8 +789,7 @@ def main():
         expires=dict(type='str', default=None),
         conn_limit=dict(type='int', default=None),
         session_role=dict(type='str'),
-        groups=dict(type='list', elements='str'),
-        comment=dict(type='str', default=None),
+        groups=dict(type='list'),
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -844,7 +814,6 @@ def main():
     groups = module.params["groups"]
     if groups:
         groups = [e.strip() for e in groups]
-    comment = module.params["comment"]
 
     conn_params = get_conn_params(module, module.params, warn_db_default=False)
     db_connection = connect_to_db(module, conn_params)
@@ -885,15 +854,8 @@ def main():
             target_roles = []
             target_roles.append(user)
             pg_membership = PgMembership(module, cursor, groups, target_roles)
-            changed = pg_membership.grant() or changed
+            changed = pg_membership.grant()
             executed_queries.extend(pg_membership.executed_queries)
-
-        if comment is not None:
-            try:
-                changed = add_comment(cursor, user, comment) or changed
-            except Exception as e:
-                module.fail_json(msg='Unable to add comment on role: %s' % to_native(e),
-                                 exception=traceback.format_exc())
 
     else:
         if user_exists(cursor, user):

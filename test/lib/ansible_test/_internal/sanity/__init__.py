@@ -4,15 +4,12 @@ __metaclass__ = type
 
 import abc
 import glob
+import json
 import os
 import re
 import collections
 
 from .. import types as t
-
-from ..io import (
-    read_json_file,
-)
 
 from ..util import (
     ApplicationError,
@@ -672,7 +669,8 @@ class SanityCodeSmellTest(SanityTest):
         self.config = None
 
         if self.config_path:
-            self.config = read_json_file(self.config_path)
+            with open(self.config_path, 'r') as config_fd:
+                self.config = json.load(config_fd)
 
         if self.config:
             self.enabled = not self.config.get('disabled')

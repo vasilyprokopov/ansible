@@ -31,7 +31,6 @@ options:
 """
 from ansible.executor.task_executor import start_connection
 from ansible.plugins.connection import ConnectionBase
-from ansible.module_utils._text import to_text
 from ansible.module_utils.connection import Connection as SocketConnection
 from ansible.utils.display import Display
 
@@ -43,10 +42,6 @@ class Connection(ConnectionBase):
 
     transport = 'persistent'
     has_pipelining = False
-
-    def __init__(self, play_context, new_stdin, *args, **kwargs):
-        super(Connection, self).__init__(play_context, new_stdin, *args, **kwargs)
-        self._task_uuid = to_text(kwargs.get('task_uuid', ''))
 
     def _connect(self):
         self._connected = True
@@ -76,7 +71,7 @@ class Connection(ConnectionBase):
         """
         display.vvvv('starting connection from persistent connection plugin', host=self._play_context.remote_addr)
         variables = {'ansible_command_timeout': self.get_option('persistent_command_timeout')}
-        socket_path = start_connection(self._play_context, variables, self._task_uuid)
+        socket_path = start_connection(self._play_context, variables)
         display.vvvv('local domain socket path is %s' % socket_path, host=self._play_context.remote_addr)
         setattr(self, '_socket_path', socket_path)
         return socket_path

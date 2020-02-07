@@ -89,8 +89,7 @@ def spacewalk_report(name):
         p.wait()
         fh.close()
 
-    with open(cache_filename, 'r') as f:
-        lines = f.readlines()
+    lines = open(cache_filename, 'r').readlines()
     keys = lines[0].strip().split(',')
     # add 'spacewalk_' prefix to the keys
     keys = ['spacewalk_' + key for key in keys]

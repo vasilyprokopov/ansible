@@ -33,10 +33,10 @@ options:
       - Whether or not a VM is booted when the system is rebooted.
   brand:
     required: true
-    choices: [ joyent, joyent-minimal, lx, kvm, bhyve ]
+    choices: [ joyent, joyent-minimal, kvm, lx ]
     default: joyent
     description:
-      - Type of virtual machine. The C(bhyve) option was added in Ansible 2.10.
+      - Type of virtual machine.
   boot:
     required: false
     description:
@@ -641,7 +641,7 @@ def main():
         brand=dict(
             default='joyent',
             type='str',
-            choices=['joyent', 'joyent-minimal', 'lx', 'kvm', 'bhyve']
+            choices=['joyent', 'joyent-minimal', 'kvm', 'lx']
         ),
         cpu_type=dict(
             default='qemu64',

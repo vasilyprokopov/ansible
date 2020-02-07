@@ -51,7 +51,6 @@ options:
     description:
     - List of column names for the src/dst table to COPY FROM/TO.
     type: list
-    elements: str
     aliases: [ column ]
   program:
     description:
@@ -334,7 +333,7 @@ def main():
         copy_from=dict(type='path', aliases=['from']),
         src=dict(type='str', aliases=['source']),
         dst=dict(type='str', aliases=['destination']),
-        columns=dict(type='list', elements='str', aliases=['column']),
+        columns=dict(type='list', aliases=['column']),
         options=dict(type='dict'),
         program=dict(type='bool', default=False),
         db=dict(type='str', aliases=['login_db']),

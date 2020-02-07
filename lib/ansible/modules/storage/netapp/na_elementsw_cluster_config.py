@@ -164,7 +164,7 @@ class ElementSWClusterConfig(object):
         return ntp_details
 
     def cmp(self, provided_ntp_servers, existing_ntp_servers):
-        # As python3 doesn't have default cmp function, defining manually to provide same functionality.
+        # As python3 doesn't have default cmp function, defining manually to provide same fuctionality.
         return (provided_ntp_servers > existing_ntp_servers) - (provided_ntp_servers < existing_ntp_servers)
 
     def get_cluster_details(self):

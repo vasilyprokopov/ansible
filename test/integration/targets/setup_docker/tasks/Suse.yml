@@ -4,4 +4,3 @@
     force: yes
     disable_gpg_check: yes
     update_cache: yes
-  notify: cleanup docker

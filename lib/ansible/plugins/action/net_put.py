@@ -17,6 +17,7 @@
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
+import copy
 import os
 import uuid
 import hashlib
@@ -35,16 +36,15 @@ class ActionModule(ActionBase):
 
     def run(self, tmp=None, task_vars=None):
         socket_path = None
-        network_os = self._get_network_os(task_vars).split('.')[-1]
-        persistent_connection = self._play_context.connection.split('.')[-1]
+        play_context = copy.deepcopy(self._play_context)
+        play_context.network_os = self._get_network_os(task_vars)
 
         result = super(ActionModule, self).run(task_vars=task_vars)
 
-        if persistent_connection != 'network_cli':
+        if play_context.connection != 'network_cli':
             # It is supported only with network_cli
             result['failed'] = True
-            result['msg'] = ('connection type %s is not valid for net_put module,'
-                             ' please use fully qualified name of network_cli connection type' % self._play_context.connection)
+            result['msg'] = ('please use network_cli connection type for net_put module')
             return result
 
         try:
@@ -115,7 +115,7 @@ class ActionModule(ActionBase):
             )
         except Exception as exc:
             if to_text(exc) == "No response from server":
-                if network_os == 'iosxr':
+                if play_context.network_os == 'iosxr':
                     # IOSXR sometimes closes socket prematurely after completion
                     # of file transfer
                     result['msg'] = 'Warning: iosxr scp server pre close issue. Please check dest'

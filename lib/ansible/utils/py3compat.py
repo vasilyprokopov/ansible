@@ -27,19 +27,14 @@ class _TextEnviron(MutableMapping):
 
     Mimics the behaviour of os.environ on Python3
     """
-    def __init__(self, env=None, encoding=None):
+    def __init__(self, env=None):
         if env is None:
             env = os.environ
         self._raw_environ = env
         self._value_cache = {}
         # Since we're trying to mimic Python3's os.environ, use sys.getfilesystemencoding()
         # instead of utf-8
-        if encoding is None:
-            # Since we're trying to mimic Python3's os.environ, use sys.getfilesystemencoding()
-            # instead of utf-8
-            self.encoding = sys.getfilesystemencoding()
-        else:
-            self.encoding = encoding
+        self.encoding = sys.getfilesystemencoding()
 
     def __delitem__(self, key):
         del self._raw_environ[key]
@@ -66,4 +61,4 @@ class _TextEnviron(MutableMapping):
         return len(self._raw_environ)
 
 
-environ = _TextEnviron(encoding='utf-8')
+environ = _TextEnviron()

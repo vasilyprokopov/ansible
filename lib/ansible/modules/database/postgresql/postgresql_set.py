@@ -42,6 +42,7 @@ options:
       reload the server configuration you must pass I(value=default).
       With I(value=default) the playbook always returns changed is true.
     type: str
+    required: true
   reset:
     description:
     - Restore parameter to initial state (boot_val). Mutually exclusive with I(value).
@@ -184,9 +185,9 @@ POSSIBLE_SIZE_UNITS = ("mb", "gb", "tb")
 
 def param_get(cursor, module, name):
     query = ("SELECT name, setting, unit, context, boot_val "
-             "FROM pg_settings WHERE name = %(name)s")
+             "FROM pg_settings WHERE name = '%s'" % name)
     try:
-        cursor.execute(query, {'name': name})
+        cursor.execute(query)
         info = cursor.fetchall()
         cursor.execute("SHOW %s" % name)
         val = cursor.fetchone()

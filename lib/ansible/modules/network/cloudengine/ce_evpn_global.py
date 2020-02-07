@@ -30,8 +30,6 @@ description:
 author: Zhijin Zhou (@QijunPan)
 notes:
     - Before configuring evpn_overlay_enable=disable, delete other EVPN configurations.
-    - Recommended connection is C(network_cli).
-    - This module also works with C(local) connections for legacy playbooks.
 options:
     evpn_overlay_enable:
         description:
@@ -104,12 +102,12 @@ changed:
 
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.network.cloudengine.ce import exec_command, load_config
+from ansible.module_utils.network.cloudengine.ce import get_config, load_config
 from ansible.module_utils.network.cloudengine.ce import ce_argument_spec
 
 
 class EvpnGlobal(object):
-    """Manage global configuration of EVPN"""
+    """Manange global configuration of EVPN"""
 
     def __init__(self, argument_spec, ):
         self.spec = argument_spec
@@ -152,14 +150,14 @@ class EvpnGlobal(object):
             self.updates_cmd.append(cmd)   # show updates result
 
     def get_evpn_global_info(self):
-        """ get current EVPN global configuration"""
+        """ get current EVPN global configration"""
 
         self.global_info['evpnOverLay'] = 'disable'
-        cmd = "display current-configuration | include ^evpn-overlay enable"
-        rc, out, err = exec_command(self.module, cmd)
-        if rc != 0:
-            self.module.fail_json(msg=err)
-        if out:
+        flags = list()
+        exp = " | include evpn-overlay enable"
+        flags.append(exp)
+        config = get_config(self.module, flags)
+        if config:
             self.global_info['evpnOverLay'] = 'enable'
 
     def get_existing(self):
@@ -198,7 +196,7 @@ class EvpnGlobal(object):
         return False
 
     def config_evnp_global(self):
-        """ set global EVPN configuration"""
+        """ set global EVPN configration"""
         if not self.conf_exist:
             if self.overlay_enable == 'enable':
                 self.cli_add_command('evpn-overlay enable')
@@ -210,7 +208,7 @@ class EvpnGlobal(object):
                 self.changed = True
 
     def work(self):
-        """execute task"""
+        """excute task"""
         self.get_evpn_global_info()
         self.get_existing()
         self.get_proposed()

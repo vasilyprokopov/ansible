@@ -124,8 +124,6 @@ class TowerCloudProvider(CloudProvider):
                 PASSWORD=connection.password,
             )
 
-            display.sensitive.add(values['PASSWORD'])
-
             config = self._populate_config_template(config, values)
 
         self._write_config(config)

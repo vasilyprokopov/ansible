@@ -24,20 +24,17 @@ options:
     group:
         description:
             - This is the name of the group
-        type: str
         required: true
     policy:
         description:
             - This is the name of the policy that was created using aci_maintenance_policy
-        type: str
         required: true
     state:
         description:
             - Use C(present) or C(absent) for adding or removing.
             - Use C(query) for listing an object or multiple objects.
-        type: str
-        choices: [absent, present, query]
         default: present
+        choices: ['absent', 'present', 'query']
 extends_documentation_fragment:
     - aci
 author:
@@ -182,9 +179,9 @@ def main():
         ],
     )
 
-    state = module.params.get('state')
-    group = module.params.get('group')
-    policy = module.params.get('policy')
+    state = module.params['state']
+    group = module.params['group']
+    policy = module.params['policy']
 
     aci = ACIModule(module)
     aci.construct_url(

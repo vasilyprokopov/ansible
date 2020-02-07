@@ -1,6 +1,5 @@
 shippable/posix/group3
 destructive
-skip/aix
 skip/freebsd
 skip/osx
 skip/rhel

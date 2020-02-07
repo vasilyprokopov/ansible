@@ -86,27 +86,27 @@ cluster:
       api_address:
           description:
             - Api address of cluster master node
-          type: str
+          type: string
           sample: https://172.24.4.30:6443
       cluster_template_id:
           description: The cluster_template UUID
-          type: str
+          type: string
           sample: '7b1418c8-cea8-48fc-995d-52b66af9a9aa'
       coe_version:
           description:
             - Version of the COE software currently running in this cluster
-          type: str
+          type: string
           sample: v1.11.1
       container_version:
           description:
-            - "Version of the container software. Example: docker version."
-          type: str
+            - Version of the container software. Example: docker version.
+          type: string
           sample: 1.12.6
       created_at:
           description:
             - The time in UTC at which the cluster is created
-          type: str
-          sample: "2018-08-16T10:29:45+00:00"
+          type: datetime
+          sample: 2018-08-16T10:29:45+00:00
       create_timeout:
           description:
             - Timeout for creating the cluster in minutes. Default to 60 if
@@ -116,7 +116,7 @@ cluster:
       discovery_url:
           description:
             - Url used for cluster node discovery
-          type: str
+          type: string
           sample: https://discovery.etcd.io/a42ee38e7113f31f4d6324f24367aae5
       faults:
           description:
@@ -126,12 +126,12 @@ cluster:
       flavor_id:
           description:
             - The flavor of the minion node for this cluster
-          type: str
+          type: string
           sample: c1.c1r1
       keypair:
           description:
             - Name of the keypair to use.
-          type: str
+          type: string
           sample: mykey
       labels:
           description: One or more key/value pairs
@@ -150,12 +150,12 @@ cluster:
       master_flavor_id:
           description:
             - The flavor of the master node for this cluster
-          type: str
+          type: string
           sample: c1.c1r1
       name:
           description:
             - Name that has to be given to the cluster
-          type: str
+          type: string
           sample: k8scluster
       node_addresses:
           description:
@@ -170,26 +170,26 @@ cluster:
       stack_id:
           description:
             - Stack id of the Heat stack
-          type: str
+          type: string
           sample: '07767ec6-85f5-44cb-bd63-242a8e7f0d9d'
       status:
           description: Status of the cluster from the heat stack
-          type: str
+          type: string
           sample: 'CREATE_COMLETE'
       status_reason:
           description:
             - Status reason of the cluster from the heat stack
-          type: str
+          type: string
           sample: 'Stack CREATE completed successfully'
       updated_at:
           description:
             - The time in UTC at which the cluster is updated
-          type: str
+          type: datetime
           sample: '2018-08-16T10:39:25+00:00'
       uuid:
           description:
             - Unique UUID for this cluster
-          type: str
+          type: string
           sample: '86246a4d-a16c-4a58-9e96ad7719fe0f9d'
 '''
 

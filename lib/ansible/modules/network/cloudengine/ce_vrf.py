@@ -29,10 +29,8 @@ description:
     - Manages VPN instance of HUAWEI CloudEngine switches.
 author: Yang yang (@QijunPan)
 notes:
-    - If I(state=absent), the route will be removed, regardless of the non-required options.
-    - This module requires the netconf system service be enabled on the remote device being managed.
-    - Recommended connection is C(netconf).
-    - This module also works with C(local) connections for legacy playbooks.
+    - If I(state=absent), the route will be removed, regardless of the
+      non-required options.
 options:
     vrf:
         description:
@@ -162,7 +160,7 @@ def build_config_xml(xmlstr):
 
 
 class Vrf(object):
-    """Manage vpn instance"""
+    """Manange vpn instance"""
 
     def __init__(self, argument_spec, ):
         self.spec = argument_spec

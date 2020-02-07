@@ -1,5 +1,7 @@
 ---
 - debug: msg="START connection={{ ansible_connection }} nxos_reboot sanity test"
+- debug: msg="Using provider={{ connection.transport }}"
+  when: ansible_connection == "local"
 
 - debug: msg="***WARNING*** Remove meta end_play to verify this module ***WARNING***"
 
@@ -9,6 +11,7 @@
   - name: Reboot Switch
     nxos_reboot:
       confirm: True
+      provider: "{{ connection }}"
     ignore_errors: yes
 
   always:

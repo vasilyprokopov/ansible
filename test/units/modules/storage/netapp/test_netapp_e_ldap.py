@@ -304,7 +304,7 @@ class LdapTest(ModuleTestCase):
     #
     #     with mock.patch(self.REQ_FUNC, return_value=(200, expected)):
     #         config = asup.get_configuration()
-    #         self.assertEqual(config, expected)
+    #         self.assertEquals(config, expected)
     #
     # def test_update_configuration(self):
     #     """Validate retrieving the ASUP configuration"""
@@ -398,9 +398,9 @@ class LdapTest(ModuleTestCase):
     #     asup = Asup()
     #
     #     self.assertTrue(asup.asup)
-    #     self.assertEqual(asup.days, ["sunday", "monday", "tuesday"]),
-    #     self.assertEqual(asup.start, 1200)
-    #     self.assertEqual(asup.end, 1439)
+    #     self.assertEquals(asup.days, ["sunday", "monday", "tuesday"]),
+    #     self.assertEquals(asup.start, 1200)
+    #     self.assertEquals(asup.end, 1439)
     #
     # def test_init_schedule_invalid(self):
     #     """Validate updating ASUP with invalid schedule fails test."""

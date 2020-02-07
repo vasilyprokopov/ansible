@@ -151,30 +151,30 @@ result:
     contains:
         _ref:
             description: The reference name of the object
-            type: str
+            type: string
         _locked:
             description: Whether or not the object is currently locked
-            type: bool
+            type: boolean
         _type:
             description: The type of the object
-            type: str
+            type: string
         name:
             description: The name of the object
-            type: str
+            type: string
         comment:
             description: The optional comment string
         op:
             description: The operand to be used with the entries of the path parameter
-            type: str
+            type: string
         path:
             description: The paths the exception in the reverse proxy is defined for
-            type: list
+            type: array
         skip_custom_threats_filters:
             description: A list of threats to be skipped
-            type: list
+            type: array
         skip_threats_filter_categories:
             description: Define which categories of threats are skipped
-            type: list
+            type: array
         skipav:
             description: Skip the Antivirus Scanning
             type: bool
@@ -201,7 +201,7 @@ result:
             type: bool
         source:
             description: Define which categories of threats are skipped
-            type: list
+            type: array
 """
 
 from ansible.module_utils.utm_utils import UTM, UTMModule

@@ -2,9 +2,6 @@
 # Copyright: (c) 2017, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
-
 ANSIBLE_METADATA = {'status': ['preview'],
                     'supported_by': 'community',
                     'metadata_version': '1.1'}
@@ -19,63 +16,57 @@ version_added: "2.5"
 options:
   name:
     description:
-      - Parameter key name.
+      - parameter key name.
     required: true
-    type: str
   description:
     description:
-      - Parameter key description.
+      - parameter key description.
     required: false
-    type: str
   value:
     description:
       - Parameter value.
     required: false
-    type: str
   state:
     description:
-      - Creates or modifies an existing parameter.
-      - Deletes a parameter.
+      - Creates or modifies an existing parameter
+      - Deletes a parameter
     required: false
     choices: ['present', 'absent']
     default: present
-    type: str
   string_type:
     description:
-      - Parameter String type.
+      - Parameter String type
     required: false
     choices: ['String', 'StringList', 'SecureString']
     default: String
-    type: str
   decryption:
     description:
       - Work with SecureString type to get plain text secrets
     type: bool
     required: false
-    default: true
+    default: True
   key_id:
     description:
-      - AWS KMS key to decrypt the secrets.
-      - The default key (C(alias/aws/ssm)) is automatically generated the first
-        time it's requested.
+      - aws KMS key to decrypt the secrets.
     required: false
-    default: alias/aws/ssm
-    type: str
+    default: aws/ssm (this key is automatically generated at the first parameter created).
   overwrite_value:
     description:
       - Option to overwrite an existing value if it already exists.
+      - String
     required: false
     version_added: "2.6"
     choices: ['never', 'changed', 'always']
     default: changed
-    type: str
+  region:
+    description:
+      - region.
+    required: false
 author:
   - Nathan Webster (@nathanwebsterdotme)
   - Bill Wang (@ozbillwang) <ozbillwang@gmail.com>
   - Michael De La Rue (@mikedlr)
-extends_documentation_fragment:
-    - aws
-    - ec2
+extends_documentation_fragment: aws
 requirements: [ botocore, boto3 ]
 '''
 
@@ -130,11 +121,12 @@ delete_parameter:
 '''
 
 from ansible.module_utils.aws.core import AnsibleAWSModule
+from ansible.module_utils.ec2 import boto3_conn, get_aws_connection_info
 
 try:
     from botocore.exceptions import ClientError
 except ImportError:
-    pass  # Handled by AnsibleAWSModule
+    pass  # will be captured by imported HAS_BOTO3
 
 
 def update_parameter(client, module, args):
@@ -224,7 +216,8 @@ def delete_parameter(client, module):
 
 
 def setup_client(module):
-    connection = module.client('ssm')
+    region, ec2_url, aws_connect_params = get_aws_connection_info(module, boto3=True)
+    connection = boto3_conn(module, conn_type='client', resource='ssm', region=region, endpoint=ec2_url, **aws_connect_params)
     return connection
 
 
@@ -238,6 +231,7 @@ def setup_module_object():
         decryption=dict(default=True, type='bool'),
         key_id=dict(default="alias/aws/ssm"),
         overwrite_value=dict(default='changed', choices=['never', 'changed', 'always']),
+        region=dict(required=False),
     )
 
     return AnsibleAWSModule(

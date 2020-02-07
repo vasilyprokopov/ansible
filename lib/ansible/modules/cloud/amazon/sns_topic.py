@@ -16,8 +16,8 @@ DOCUMENTATION = """
 module: sns_topic
 short_description: Manages AWS SNS topics and subscriptions
 description:
-    - The M(sns_topic) module allows you to create, delete, and manage subscriptions for AWS SNS topics.
-    - As of 2.6, this module can be use to subscribe and unsubscribe to topics outside of your AWS account.
+    - The C(sns_topic) module allows you to create, delete, and manage subscriptions for AWS SNS topics. As of 2.6,
+      this module can be use to subscribe and unsubscribe to topics outside of your AWS account.
 version_added: 2.0
 author:
   - "Joel Thompson (@joelthompson)"
@@ -26,27 +26,22 @@ author:
 options:
   name:
     description:
-      - The name or ARN of the SNS topic to manage.
-    required: true
-    type: str
+      - The name or ARN of the SNS topic to manage
+    required: True
   state:
     description:
-      - Whether to create or destroy an SNS topic.
+      - Whether to create or destroy an SNS topic
     default: present
     choices: ["absent", "present"]
-    type: str
   display_name:
     description:
-      - Display name of the topic.
-    type: str
+      - Display name of the topic
   policy:
     description:
-      - Policy to apply to the SNS topic.
-    type: dict
+      - Policy to apply to the SNS topic
   delivery_policy:
     description:
-      - Delivery policy to apply to the SNS topic.
-    type: dict
+      - Delivery policy to apply to the SNS topic
   subscriptions:
     description:
       - List of subscriptions to apply to the topic. Note that AWS requires
@@ -54,13 +49,11 @@ options:
         subscriptions.
     suboptions:
       endpoint:
-        description: Endpoint of subscription.
-        required: true
+        description: Endpoint of subscription
+        required: yes
       protocol:
-        description: Protocol of subscription.
-        required: true
-    type: list
-    elements: dict
+        description: Protocol of subscription
+        required: yes
     default: []
   purge_subscriptions:
     description:
@@ -69,7 +62,7 @@ options:
         exist and would be purged, they are silently skipped. This means that
         somebody could come back later and confirm the subscription. Sorry.
         Blame Amazon."
-    default: true
+    default: 'yes'
     type: bool
 extends_documentation_fragment:
   - aws
@@ -264,12 +257,12 @@ class SnsTopicManager(object):
         paginator = self.connection.get_paginator('list_topics')
         return paginator.paginate().build_full_result()['Topics']
 
-    @AWSRetry.jittered_backoff(catch_extra_error_codes=['NotFound'])
+    @AWSRetry.jittered_backoff()
     def _list_topic_subscriptions_with_backoff(self):
         paginator = self.connection.get_paginator('list_subscriptions_by_topic')
         return paginator.paginate(TopicArn=self.topic_arn).build_full_result()['Subscriptions']
 
-    @AWSRetry.jittered_backoff(catch_extra_error_codes=['NotFound'])
+    @AWSRetry.jittered_backoff()
     def _list_subscriptions_with_backoff(self):
         paginator = self.connection.get_paginator('list_subscriptions')
         return paginator.paginate().build_full_result()['Subscriptions']

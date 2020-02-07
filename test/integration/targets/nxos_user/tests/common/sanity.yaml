@@ -1,5 +1,7 @@
 ---
 - debug: msg="START connection={{ ansible_connection }} nxos_user parameter test"
+- debug: msg="Using provider={{ connection.transport }}"
+  when: ansible_connection == "local"
 
 - set_fact: idem="true"
 - set_fact: idem="false"
@@ -12,6 +14,7 @@
       configured_password: Hello!23$
       update_password: on_create
       roles: network-operator
+      provider: "{{ connection }}"
       state: present
     register: result
 
@@ -32,6 +35,7 @@
   - name: Remove user
     nxos_user: &remove
       name: netend
+      provider: "{{ connection }}"
       state: absent
     register: result
 
@@ -49,6 +53,7 @@
 #    nxos_user: &conf1
 #      name: ansible
 #      sshkey: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+#      provider: "{{ connection }}"
 #      state: present
 #    register: result
 #
@@ -70,6 +75,7 @@
         - name: test2
       configured_password: Hello!23$
       update_password: on_create
+      provider: "{{ connection }}"
       state: present
       roles: 
         - network-admin
@@ -89,8 +95,9 @@
 
   - name: tearDown
     nxos_user: &tear
-      name: "{{ ansible_user }}"
+      name: ansible
       purge: yes
+      provider: "{{ connection }}"
     register: result
 
   - assert: *true

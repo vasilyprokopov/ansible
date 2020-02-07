@@ -235,11 +235,6 @@ files:
             returned: success, path exists
             type: float
             sample: 1477984205.15
-        exists:
-            description: Whether the file exists, will always be true for M(win_find).
-            returned: success, path exists
-            type: bool
-            sample: true
         extension:
             description: The extension of the file at path.
             returned: success, path exists, path is a file
@@ -250,13 +245,6 @@ files:
             returned: success, path exists
             type: str
             sample: temp
-        hlnk_targets:
-            description: List of other files pointing to the same file (hard links), excludes the current file.
-            returned: success, path exists
-            type: list
-            sample:
-            - C:\temp\file.txt
-            - C:\Windows\update.log
         isarchive:
             description: If the path is ready for archiving or not.
             returned: success, path exists
@@ -272,23 +260,13 @@ files:
             returned: success, path exists
             type: bool
             sample: true
-        isjunction:
-            description: If the path is a junction point.
-            returned: success, path exists
-            type: bool
-            sample: true
         islnk:
-            description: If the path is a symbolic link.
+            description: If the path is a symbolic link or junction or not.
             returned: success, path exists
             type: bool
             sample: true
         isreadonly:
             description: If the path is read only or not.
-            returned: success, path exists
-            type: bool
-            sample: true
-        isreg:
-            description: If the path is a regular file or not.
             returned: success, path exists
             type: bool
             sample: true
@@ -308,20 +286,10 @@ files:
             type: float
             sample: 1477984205.15
         lnk_source:
-            description: The target of the symlink normalized for the remote filesystem.
-            returned: success, path exists, path is a symbolic link or junction point
+            description: The target of the symbolic link, will return null if not a link or the link is broken.
+            return: success, path exists, path is a symbolic link
             type: str
             sample: C:\temp
-        lnk_target:
-            description: The target of the symlink. Note that relative paths remain relative, will return null if not a link.
-            returned: success, path exists, path is a symbolic link or junction point
-            type: str
-            sample: temp
-        nlink:
-            description: Number of links to the file (hard links)
-            returned: success, path exists
-            type: int
-            sample: 1
         owner:
             description: The owner of the file.
             returned: success, path exists
@@ -338,8 +306,8 @@ files:
             type: str
             sample: file-share
         size:
-            description: The size in bytes of the file.
-            returned: success, path exists, path is a file
+            description: The size in bytes of a file or folder.
+            returned: success, path exists, path is not a link
             type: int
             sample: 1024
 '''

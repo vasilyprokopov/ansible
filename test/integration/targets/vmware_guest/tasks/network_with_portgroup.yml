@@ -28,13 +28,13 @@
     disk:
       - size: 3mb
         type: thin
-        datastore: "{{ rw_datastore }}"
+        autoselect_datastore: yes
     networks:
       - name: portgroup_network
         switch_name: "{{ dvswitch1 }}"
     hardware:
         num_cpus: 1
-        memory_mb: 128
+        memory_mb: 512
     state: poweredoff
     folder: "{{ f0 }}"
   register: vm_with_portgroup

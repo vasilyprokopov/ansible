@@ -31,8 +31,8 @@ author:
 options:
   event_name:
     description:
-      - Unique name for event notification on bucket.
-    required: true
+      - unique name for event notification on bucket
+    required: True
     type: str
   lambda_function_arn:
     description:
@@ -41,24 +41,25 @@ options:
     type: str
   bucket_name:
     description:
-      - S3 bucket name.
-    required: true
+      - S3 bucket name
+    required: True
     type: str
   state:
     description:
       - Describes the desired state.
+    required: true
     default: "present"
     choices: ["present", "absent"]
     type: str
   lambda_alias:
     description:
-      - Name of the Lambda function alias.
-      - Mutually exclusive with I(lambda_version).
+      - Name of the Lambda function alias. Mutually exclusive with C(lambda_version).
+    required: false
     type: str
   lambda_version:
     description:
-      - Version of the Lambda function.
-      - Mutually exclusive with I(lambda_alias).
+      -  Version of the Lambda function. Mutually exclusive with C(lambda_alias).
+    required: false
     type: int
   events:
     description:
@@ -67,23 +68,24 @@ options:
         and you can set up a prefix or suffix for an event. However, for each bucket,
         individual events cannot have multiple configurations with overlapping prefixes or
         suffixes that could match the same object key.
-      - Required when I(state=present).
+    required: True
     choices: ['s3:ObjectCreated:*', 's3:ObjectCreated:Put', 's3:ObjectCreated:Post',
               's3:ObjectCreated:Copy', 's3:ObjectCreated:CompleteMultipartUpload',
               's3:ObjectRemoved:*', 's3:ObjectRemoved:Delete',
               's3:ObjectRemoved:DeleteMarkerCreated', 's3:ObjectRestore:Post',
               's3:ObjectRestore:Completed', 's3:ReducedRedundancyLostObject']
     type: list
-    elements: str
   prefix:
     description:
       - Optional prefix to limit the notifications to objects with keys that start with matching
         characters.
+    required: false
     type: str
   suffix:
     description:
       - Optional suffix to limit the notifications to objects with keys that end with matching
         characters.
+    required: false
     type: str
 requirements:
     - boto3

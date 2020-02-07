@@ -1,9 +1,2 @@
 ---
-
-- name: Set system defaults for switchports
-  nxos_config:
-    lines: |
-      no system default switchport
-      system default switchport shutdown
-
 - { include: cli.yaml, tags: ['cli'] }

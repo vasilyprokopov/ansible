@@ -236,7 +236,6 @@ EXAMPLES = r"""
     enable_drs: yes
     enable_vsan: yes
     state: absent
-  delegate_to: localhost
 """
 
 RETURN = r"""#

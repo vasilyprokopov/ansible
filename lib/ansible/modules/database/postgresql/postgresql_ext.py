@@ -228,13 +228,11 @@ def ext_update_version(cursor, ext, version):
       version (str) -- extension version
     """
     if version != 'latest':
-        query = ("ALTER EXTENSION \"%s\"" % ext)
-        cursor.execute(query + " UPDATE TO %(ver)s", {'ver': version})
-        executed_queries.append(cursor.mogrify(query + " UPDATE TO %(ver)s", {'ver': version}))
+        query = ("ALTER EXTENSION \"%s\" UPDATE TO '%s'" % (ext, version))
     else:
         query = ("ALTER EXTENSION \"%s\" UPDATE" % ext)
-        cursor.execute(query)
-        executed_queries.append(query)
+    cursor.execute(query)
+    executed_queries.append(query)
     return True
 
 
@@ -243,16 +241,11 @@ def ext_create(cursor, ext, schema, cascade, version):
     if schema:
         query += " WITH SCHEMA \"%s\"" % schema
     if version:
-        query += " VERSION %(ver)s"
+        query += " VERSION '%s'" % version
     if cascade:
         query += " CASCADE"
-
-    if version:
-        cursor.execute(query, {'ver': version})
-        executed_queries.append(cursor.mogrify(query, {'ver': version}))
-    else:
-        cursor.execute(query)
-        executed_queries.append(query)
+    cursor.execute(query)
+    executed_queries.append(query)
     return True
 
 
@@ -274,18 +267,18 @@ def ext_get_versions(cursor, ext):
 
     # 1. Get the current extension version:
     query = ("SELECT extversion FROM pg_catalog.pg_extension "
-             "WHERE extname = %(ext)s")
+             "WHERE extname = '%s'" % ext)
 
     current_version = '0'
-    cursor.execute(query, {'ext': ext})
+    cursor.execute(query)
     res = cursor.fetchone()
     if res:
         current_version = res[0]
 
     # 2. Get available versions:
     query = ("SELECT version FROM pg_available_extension_versions "
-             "WHERE name = %(ext)s")
-    cursor.execute(query, {'ext': ext})
+             "WHERE name = '%s'" % ext)
+    cursor.execute(query)
     res = cursor.fetchall()
 
     available_versions = []

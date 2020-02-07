@@ -17,7 +17,7 @@ from copy import deepcopy
 
 from ansible.module_utils.network.common import utils
 from ansible.module_utils.network.nxos.argspec.l3_interfaces.l3_interfaces import L3_interfacesArgs
-from ansible.module_utils.network.nxos.utils.utils import get_interface_type
+from ansible.module_utils.network.nxos.utils.utils import get_interface_type, validate_ipv4_addr, validate_ipv6_addr
 
 
 class L3_interfacesFacts(object):
@@ -83,19 +83,18 @@ class L3_interfacesFacts(object):
         if get_interface_type(intf) == 'unknown':
             return {}
         config['name'] = intf
-        config['dot1q'] = utils.parse_conf_arg(conf, 'encapsulation dot1[qQ]')
-        config['redirects'] = utils.parse_conf_cmd_arg(conf, 'no ip redirects', False, True)
-        config['unreachables'] = utils.parse_conf_cmd_arg(conf, 'ip unreachables', True, False)
+
         ipv4_match = re.compile(r'\n  ip address (.*)')
         matches = ipv4_match.findall(conf)
         if matches:
-            if matches[0]:
+            if validate_ipv4_addr(matches[0]):
                 config['ipv4'] = []
                 for m in matches:
                     ipv4_conf = m.split()
                     addr = ipv4_conf[0]
-                    if addr:
-                        config_dict = {'address': addr}
+                    ipv4_addr = addr if validate_ipv4_addr(addr) else None
+                    if ipv4_addr:
+                        config_dict = {'address': ipv4_addr}
                         if len(ipv4_conf) > 1:
                             d = ipv4_conf[1]
                             if d == 'secondary':
@@ -110,13 +109,14 @@ class L3_interfacesFacts(object):
         ipv6_match = re.compile(r'\n  ipv6 address (.*)')
         matches = ipv6_match.findall(conf)
         if matches:
-            if matches[0]:
+            if validate_ipv6_addr(matches[0]):
                 config['ipv6'] = []
                 for m in matches:
                     ipv6_conf = m.split()
                     addr = ipv6_conf[0]
-                    if addr:
-                        config_dict = {'address': addr}
+                    ipv6_addr = addr if validate_ipv6_addr(addr) else None
+                    if ipv6_addr:
+                        config_dict = {'address': ipv6_addr}
                         if len(ipv6_conf) > 1:
                             d = ipv6_conf[1]
                             if d == 'tag':

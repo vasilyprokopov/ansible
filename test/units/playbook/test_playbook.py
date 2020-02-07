@@ -29,6 +29,12 @@ from units.mock.loader import DictDataLoader
 
 class TestPlaybook(unittest.TestCase):
 
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
     def test_empty_playbook(self):
         fake_loader = DictDataLoader({})
         p = Playbook(loader=fake_loader)

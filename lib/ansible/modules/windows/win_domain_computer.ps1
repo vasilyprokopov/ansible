@@ -59,7 +59,6 @@ If ($state -eq "present") {
 } Else {
   $desired_state = [ordered]@{
     name = $name
-    sam_account_name = $sam_account_name
     state = $state
   }
 }
@@ -69,7 +68,7 @@ Function Get-InitialState($desired_state) {
   # Test computer exists
   $computer = Try {
     Get-ADComputer `
-      -Identity $desired_state.sam_account_name `
+      -Identity $desired_state.name `
       -Properties DistinguishedName,DNSHostName,Enabled,Name,SamAccountName,Description,ObjectClass `
       @extra_args
   } Catch { $null }
@@ -88,7 +87,6 @@ Function Get-InitialState($desired_state) {
   } Else {
     $initial_state = [ordered]@{
       name = $desired_state.name
-      sam_account_name = $desired_state.sam_account_name
       state = "absent"
     }
   }
@@ -114,14 +112,14 @@ Function Set-ConstructedState($initial_state, $desired_state) {
   If ($initial_state.distinguished_name -cne $desired_state.distinguished_name) {
     # Move computer to OU
     Try {
-      Get-ADComputer -Identity $desired_state.sam_account_name @extra_args |
+      Get-ADComputer -Identity $desired_state.name |
           Move-ADObject `
             -TargetPath $desired_state.ou `
             -Confirm:$False `
             -WhatIf:$check_mode `
             @extra_args
     } Catch {
-      Fail-Json -obj $result -message "Failed to move the AD object $($initial_state.distinguished_name) to $($desired_state.distinguished_name): $($_.Exception.Message)"
+      Fail-Json -obj $result -message "Failed to move the AD object $($desired_state.name) to $($desired_state.ou) OU: $($_.Exception.Message)"
     }
   }
   $result.changed = $true
@@ -149,12 +147,12 @@ Function Add-ConstructedState($desired_state) {
 # ------------------------------------------------------------------------------
 Function Remove-ConstructedState($initial_state) {
   Try {
-    Get-ADComputer -Identity $initial_state.sam_account_name @extra_args |
-      Remove-ADObject `
-        -Recursive `
-        -Confirm:$False `
-        -WhatIf:$check_mode `
-        @extra_args
+    Get-ADComputer $initial_state.name `
+    | Remove-ADObject `
+      -Recursive `
+      -Confirm:$False `
+      -WhatIf:$check_mode `
+      @extra_args
   } Catch {
     Fail-Json -obj $result -message "Failed to remove the AD object $($desired_state.name): $($_.Exception.Message)"
   }

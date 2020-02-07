@@ -365,12 +365,12 @@ before:
   description: The configuration as structured data prior to module invocation.
   returned: always
   type: list
-  sample: The configuration returned will always be in the same format of the parameters above.
+  sample: The configuration returned will alwys be in the same format of the paramters above.
 after:
   description: The configuration as structured data after module completion.
   returned: when changed
   type: list
-  sample: The configuration returned will always be in the same format of the parameters above.
+  sample: The configuration returned will alwys be in the same format of the paramters above.
 commands:
   description: The set of commands pushed to the remote device
   returned: always
@@ -389,12 +389,7 @@ def main():
 
     :returns: the result form module invocation
     """
-    required_if = [('state', 'merged', ('config',)),
-                   ('state', 'replaced', ('config',)),
-                   ('state', 'overridden', ('config',))]
-
     module = AnsibleModule(argument_spec=InterfacesArgs.argument_spec,
-                           required_if=required_if,
                            supports_check_mode=True)
 
     result = Interfaces(module).execute_module()

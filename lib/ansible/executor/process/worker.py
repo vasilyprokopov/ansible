@@ -19,6 +19,7 @@
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
+import multiprocessing
 import os
 import sys
 import traceback
@@ -40,14 +41,13 @@ from ansible.executor.task_executor import TaskExecutor
 from ansible.executor.task_result import TaskResult
 from ansible.module_utils._text import to_text
 from ansible.utils.display import Display
-from ansible.utils.multiprocessing import context as multiprocessing_context
 
 __all__ = ['WorkerProcess']
 
 display = Display()
 
 
-class WorkerProcess(multiprocessing_context.Process):
+class WorkerProcess(multiprocessing.Process):
     '''
     The worker thread class, which uses TaskExecutor to run tasks
     read from a job queue and pushes results into a results queue

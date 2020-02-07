@@ -21,15 +21,12 @@ requirements: [ boto3 ]
 options:
   peer_connection_ids:
     description:
-      - List of specific VPC peer IDs to get details for.
-    type: list
-    elements: str
+      - Get details of specific vpc peer IDs
   filters:
     description:
       - A dict of filters to apply. Each dict item consists of a filter key and a filter value.
         See U(https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcPeeringConnections.html)
         for possible filters.
-    type: dict
 author: Karen Cheng (@Etherdaemon)
 extends_documentation_fragment:
   - aws

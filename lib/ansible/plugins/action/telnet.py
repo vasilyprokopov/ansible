@@ -75,7 +75,7 @@ class ActionModule(ActionBase):
                     for cmd in commands:
                         display.vvvvv('>>> %s' % cmd)
                         tn.write(to_bytes(cmd + "\n"))
-                        index, match, out = tn.expect(list(map(to_bytes, prompts)), timeout=timeout)
+                        index, match, out = tn.expect(list(map(to_bytes, prompts)))
                         display.vvvvv('<<< %s' % cmd)
                         output.append(out)
                         sleep(pause)

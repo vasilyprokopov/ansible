@@ -35,6 +35,7 @@ except ImportError:
     HAS_PSYCOPG2 = False
 
 from ansible.module_utils.basic import missing_required_lib
+from ansible.module_utils.database import pg_quote_identifier
 from ansible.module_utils._text import to_native
 from ansible.module_utils.six import iteritems
 from distutils.version import LooseVersion
@@ -93,9 +94,8 @@ def connect_to_db(module, conn_params, autocommit=False, fail_on_conn=True):
         # Switch role, if specified:
         if module.params.get('session_role'):
             cursor = db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
             try:
-                cursor.execute('SET ROLE "%s"' % module.params['session_role'])
+                cursor.execute('SET ROLE %s' % module.params['session_role'])
             except Exception as e:
                 module.fail_json(msg="Could not switch role: %s" % to_native(e))
             finally:
@@ -122,7 +122,7 @@ def connect_to_db(module, conn_params, autocommit=False, fail_on_conn=True):
     return db_connection
 
 
-def exec_sql(obj, query, query_params=None, ddl=False, add_to_executed=True, dont_exec=False):
+def exec_sql(obj, query, ddl=False, add_to_executed=True):
     """Execute SQL.
 
     Auxiliary function for PostgreSQL user classes.
@@ -130,42 +130,20 @@ def exec_sql(obj, query, query_params=None, ddl=False, add_to_executed=True, don
     Returns a query result if possible or True/False if ddl=True arg was passed.
     It necessary for statements that don't return any result (like DDL queries).
 
-    Args:
+    Arguments:
         obj (obj) -- must be an object of a user class.
             The object must have module (AnsibleModule class object) and
             cursor (psycopg cursor object) attributes
         query (str) -- SQL query to execute
-
-    Kwargs:
-        query_params (dict or tuple) -- Query parameters to prevent SQL injections,
-            could be a dict or tuple
         ddl (bool) -- must return True or False instead of rows (typical for DDL queries)
             (default False)
         add_to_executed (bool) -- append the query to obj.executed_queries attribute
-        dont_exec (bool) -- used with add_to_executed=True to generate a query, add it
-            to obj.executed_queries list and return True (default False)
     """
+    try:
+        obj.cursor.execute(query)
 
-    if dont_exec:
-        # This is usually needed to return queries in check_mode
-        # without execution
-        query = obj.cursor.mogrify(query, query_params)
         if add_to_executed:
             obj.executed_queries.append(query)
-
-        return True
-
-    try:
-        if query_params is not None:
-            obj.cursor.execute(query, query_params)
-        else:
-            obj.cursor.execute(query)
-
-        if add_to_executed:
-            if query_params is not None:
-                obj.executed_queries.append(obj.cursor.mogrify(query, query_params))
-            else:
-                obj.executed_queries.append(query)
 
         if not ddl:
             res = obj.cursor.fetchall()
@@ -245,7 +223,8 @@ class PgMembership(object):
                 if self.__check_membership(group, role):
                     continue
 
-                query = 'GRANT "%s" TO "%s"' % (group, role)
+                query = "GRANT %s TO %s" % ((pg_quote_identifier(group, 'role'),
+                                            (pg_quote_identifier(role, 'role'))))
                 self.changed = exec_sql(self, query, ddl=True)
 
                 if self.changed:
@@ -262,7 +241,8 @@ class PgMembership(object):
                 if not self.__check_membership(group, role):
                     continue
 
-                query = 'REVOKE "%s" FROM "%s"' % (group, role)
+                query = "REVOKE %s FROM %s" % ((pg_quote_identifier(group, 'role'),
+                                               (pg_quote_identifier(role, 'role'))))
                 self.changed = exec_sql(self, query, ddl=True)
 
                 if self.changed:
@@ -276,9 +256,9 @@ class PgMembership(object):
                  "JOIN pg_catalog.pg_roles b ON (m.roleid = b.oid) "
                  "WHERE m.member = r.oid) "
                  "FROM pg_catalog.pg_roles r "
-                 "WHERE r.rolname = %(dst_role)s")
+                 "WHERE r.rolname = '%s'" % dst_role)
 
-        res = exec_sql(self, query, query_params={'dst_role': dst_role}, add_to_executed=False)
+        res = exec_sql(self, query, add_to_executed=False)
         membership = []
         if res:
             membership = res[0][0]

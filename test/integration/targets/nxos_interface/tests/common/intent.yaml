@@ -1,4 +1,6 @@
 - debug: msg="START connection={{ ansible_connection }} nxos_interface intent test"
+- debug: msg="Using provider={{ connection.transport }}"
+  when: ansible_connection == "local"
 
 - set_fact: testint1="{{ nxos_int1 }}"
 - set_fact: testint2="{{ nxos_int2 }}"
@@ -8,6 +10,7 @@
     lines:
       - "default interface {{ testint1 }}"
       - "default interface {{ testint2 }}"
+    provider: "{{ connection }}"
   ignore_errors: yes
 
 - name: Check intent arguments
@@ -16,6 +19,7 @@
     admin_state: up
     tx_rate: ge(0)
     rx_rate: ge(0)
+    provider: "{{ connection }}"
   register: result
 
 - assert:
@@ -33,6 +37,7 @@
     admin_state: down
     tx_rate: gt(10000)
     rx_rate: lt(0)
+    provider: "{{ connection }}"
   ignore_errors: yes
   register: result
 
@@ -47,6 +52,7 @@
     aggregate:
       - { name: "{{ testint1 }}", description: "Test aggregation on first interface" }
       - { name: "{{ testint2 }}", mode: layer3 }
+    provider: "{{ connection }}"
   register: result
 
 - assert:
@@ -58,6 +64,7 @@
     lines:
       - "default interface {{ testint1 }}"
       - "default interface {{ testint2 }}"
+    provider: "{{ connection }}"
   ignore_errors: yes
 
 - debug: msg="END connection={{ ansible_connection }} nxos_interface intent test"

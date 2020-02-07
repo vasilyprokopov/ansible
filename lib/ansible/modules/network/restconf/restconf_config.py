@@ -148,6 +148,7 @@ def main():
     result = {'changed': False, 'warnings': warnings}
 
     running = None
+    response = None
     commit = not module.check_mode
     try:
         running = restconf.get(module, path, output=format)
@@ -161,7 +162,7 @@ def main():
         if method == 'delete':
             if running:
                 if commit:
-                    restconf.edit_config(module, path=path, method='DELETE')
+                    response = restconf.edit_config(module, path=path, method='DELETE')
                 result['changed'] = True
             else:
                 warnings.append("delete not executed as resource '%s' does not exist" % path)
@@ -181,7 +182,7 @@ def main():
                     result['diff'] = {'prepared': diff, 'before': candidate, 'after': running}
 
                 if commit:
-                    restconf.edit_config(module, path=path, content=diff, method=method.upper(), format=format)
+                    response = restconf.edit_config(module, path=path, content=diff, method=method.upper(), format=format)
                 result['changed'] = True
 
     except ConnectionError as exc:

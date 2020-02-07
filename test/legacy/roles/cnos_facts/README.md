@@ -1,4 +1,4 @@
-# Ansible Role: cnos_facts_sample - Displays switch information
+# Ansible Role: cnos_facts_sample - Displays switch inforamtion
 ---
 <add role description below>
 
@@ -68,7 +68,7 @@ To execute an Ansible playbook, use the following command:
 ansible-playbook cnos_facts_sample.yml -vvv
 ```
 
-`-vvv` is an optional verbose command that helps identify what is happening during playbook execution. The playbook for each role is located in the main directory of the solution.
+`-vvv` is an optional verbos command that helps identify what is happening during playbook execution. The playbook for each role is located in the main directory of the solution.
 
 ```
  - name: Module to do Show Sys Info

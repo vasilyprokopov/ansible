@@ -35,6 +35,8 @@ import socket
 import json
 
 from itertools import chain
+from socket import inet_aton
+from json import dumps
 
 from ansible.module_utils._text import to_text, to_bytes
 from ansible.module_utils.common._collections_compat import Mapping
@@ -43,9 +45,7 @@ from ansible.module_utils import basic
 from ansible.module_utils.parsing.convert_bool import boolean
 
 # Backwards compatibility for 3rd party modules
-# TODO(pabelanger): With move to ansible.netcommon, we should clean this code
-# up and have modules import directly themself.
-from ansible.module_utils.common.network import (  # noqa: F401
+from ansible.module_utils.common.network import (
     to_bits, is_netmask, is_masklen, to_netmask, to_masklen, to_subnet, to_ipv6_network, VALID_MASKS
 )
 
@@ -260,10 +260,7 @@ def dict_diff(base, comparable):
     if not isinstance(base, dict):
         raise AssertionError("`base` must be of type <dict>")
     if not isinstance(comparable, dict):
-        if comparable is None:
-            comparable = dict()
-        else:
-            raise AssertionError("`comparable` must be of type <dict>")
+        raise AssertionError("`comparable` must be of type <dict>")
 
     updates = dict()
 
@@ -433,10 +430,12 @@ def validate_prefix(prefix):
 
 
 def load_provider(spec, args):
-    provider = args.get('provider') or {}
+    provider = args.get('provider', {})
     for key, value in iteritems(spec):
         if key not in provider:
-            if 'fallback' in value:
+            if key in args:
+                provider[key] = args[key]
+            elif 'fallback' in value:
                 provider[key] = _fallback(value['fallback'])
             elif 'default' in value:
                 provider[key] = value['default']
@@ -597,7 +596,7 @@ def validate_config(spec, data):
 
 def search_obj_in_list(name, lst, key='name'):
     for item in lst:
-        if item.get(key) == name:
+        if item[key] == name:
             return item
     return None
 

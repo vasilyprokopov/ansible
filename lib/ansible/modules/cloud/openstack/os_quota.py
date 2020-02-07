@@ -180,7 +180,7 @@ openstack_quotas:
     description: Dictionary describing the project quota.
     returned: Regardless if changes where made or not
     type: complex
-    sample:
+    contains:
         openstack_quotas: {
             compute: {
                 cores: 150,

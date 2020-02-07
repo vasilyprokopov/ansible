@@ -52,12 +52,6 @@ options:
     default: 10
     type: int
     version_added: '2.8'
-  resource_id:
-    required: false
-    description:
-      - The ID of the System, Manager or Chassis to modify
-    type: str
-    version_added: '2.10'
 
 author: "Jose Delarosa (@jose-delarosa)"
 '''
@@ -67,7 +61,6 @@ EXAMPLES = '''
     idrac_redfish_command:
       category: Systems
       command: CreateBiosConfigJob
-      resource_id: System.Embedded.1
       baseuri: "{{ baseuri }}"
       username: "{{ username }}"
       password: "{{ password }}"
@@ -144,8 +137,7 @@ def main():
             baseuri=dict(required=True),
             username=dict(required=True),
             password=dict(required=True, no_log=True),
-            timeout=dict(type='int', default=10),
-            resource_id=dict()
+            timeout=dict(type='int', default=10)
         ),
         supports_check_mode=False
     )
@@ -160,13 +152,9 @@ def main():
     # timeout
     timeout = module.params['timeout']
 
-    # System, Manager or Chassis ID to modify
-    resource_id = module.params['resource_id']
-
     # Build root URI
     root_uri = "https://" + module.params['baseuri']
-    rf_utils = IdracRedfishUtils(creds, root_uri, timeout, module,
-                                 resource_id=resource_id, data_modification=True)
+    rf_utils = IdracRedfishUtils(creds, root_uri, timeout, module)
 
     # Check that Category is valid
     if category not in CATEGORY_COMMANDS_ALL:

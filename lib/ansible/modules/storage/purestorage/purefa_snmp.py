@@ -86,7 +86,7 @@ extends_documentation_fragment:
 '''
 
 EXAMPLES = r'''
-- name: Delete existing SNMP manager
+- name: Delete exisitng SNMP manager
   purefa_snmp:
     name: manager1
     state: absent

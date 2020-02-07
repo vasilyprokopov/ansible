@@ -229,7 +229,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
     def parse(self, inventory, loader, path, cache=True):
 
         try:
-            self._vbox_path = get_bin_path(self.VBOX)
+            self._vbox_path = get_bin_path(self.VBOX, True)
         except ValueError as e:
             raise AnsibleParserError(e)
 

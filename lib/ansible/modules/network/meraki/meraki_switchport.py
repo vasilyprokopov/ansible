@@ -136,7 +136,7 @@ EXAMPLES = r'''
     voice_vlan: 11
   delegate_to: localhost
 
-- name: Check access port for idempotency
+- name: Check access port for idempotenty
   meraki_switchport:
     auth_key: abc12345
     state: present

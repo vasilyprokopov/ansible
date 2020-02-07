@@ -1,4 +1,3 @@
----
 # vyos.py in plugins and module_utils/network covered by these as well
 # hit NetworkConfig
 - name: configure simple config command

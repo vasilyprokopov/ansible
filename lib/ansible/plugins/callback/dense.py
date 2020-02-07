@@ -17,7 +17,7 @@ author:
 - Dag Wieers (@dagwieers)
 version_added: "2.3"
 requirements:
-- set as stdout in configuration
+- set as stdout in configuation
 '''
 
 HAS_OD = False
@@ -229,7 +229,7 @@ class CallbackModule_dense(CallbackModule_default):
                 self._display_results(result, status)
 
     def _clean_results(self, result):
-        # Remove non-essential attributes
+        # Remove non-essential atributes
         for attr in self.removed_attributes:
             if attr in result:
                 del(result[attr])

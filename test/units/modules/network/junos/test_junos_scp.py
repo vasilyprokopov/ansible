@@ -22,61 +22,72 @@ __metaclass__ = type
 from units.compat.mock import patch, MagicMock
 from units.modules.utils import set_module_args
 from .junos_module import TestJunosModule
-
 jnpr_mock = MagicMock()
+scp_mock = MagicMock()
+
 modules = {
     'jnpr': jnpr_mock,
     'jnpr.junos': jnpr_mock.junos,
     'jnpr.junos.utils': jnpr_mock.junos.utils,
     'jnpr.junos.utils.scp': jnpr_mock.junos.utils.scp,
+    'jnpr.junos.exception': jnpr_mock.junos.execption
 }
 module_patcher = patch.dict('sys.modules', modules)
 module_patcher.start()
 
+jnpr_mock.junos.utils.scp.SCP().__enter__.return_value = scp_mock
+
 from ansible.modules.network.junos import junos_scp
 
 
-class TestJunosScpModule(TestJunosModule):
+class TestJunosCommandModule(TestJunosModule):
 
     module = junos_scp
 
     def setUp(self):
-        super(TestJunosScpModule, self).setUp()
-        self.mock_get_device = patch('ansible.modules.network.junos.junos_scp.get_device')
-        self.get_device = self.mock_get_device.start()
-
-        self.mock_scp = patch('ansible.modules.network.junos.junos_scp.SCP')
-        self.scp = self.mock_scp.start()
-
-        self.scp_mock = MagicMock()
-        self.scp().__enter__.return_value = self.scp_mock
+        super(TestJunosCommandModule, self).setUp()
 
     def tearDown(self):
-        super(TestJunosScpModule, self).tearDown()
-        self.mock_get_device.stop()
-        self.mock_scp.stop()
+        super(TestJunosCommandModule, self).tearDown()
 
     def test_junos_scp_src(self):
         set_module_args(dict(src='test.txt'))
-        self.execute_module(changed=True)
-
-        self.scp_mock.put.assert_called_once_with('test.txt', remote_path='.', recursive=False)
+        result = self.execute_module(changed=True)
+        args, kwargs = scp_mock.put.call_args
+        self.assertEqual(args[0], 'test.txt')
+        self.assertEqual(result['changed'], True)
 
     def test_junos_scp_src_fail(self):
-        self.scp_mock.put.side_effect = OSError("[Errno 2] No such file or directory: 'text.txt'")
+        scp_mock.put.side_effect = OSError("[Errno 2] No such file or directory: 'text.txt'")
         set_module_args(dict(src='test.txt'))
         result = self.execute_module(changed=True, failed=True)
-
         self.assertEqual(result['msg'], "[Errno 2] No such file or directory: 'text.txt'")
 
     def test_junos_scp_remote_src(self):
         set_module_args(dict(src='test.txt', remote_src=True))
-        self.execute_module(changed=True)
-
-        self.scp_mock.get.assert_called_once_with('test.txt', local_path='.', recursive=False)
+        result = self.execute_module(changed=True)
+        args, kwargs = scp_mock.get.call_args
+        self.assertEqual(args[0], 'test.txt')
+        self.assertEqual(result['changed'], True)
 
     def test_junos_scp_all(self):
         set_module_args(dict(src='test', remote_src=True, dest="tmp", recursive=True))
-        self.execute_module(changed=True)
+        result = self.execute_module(changed=True)
+        args, kwargs = scp_mock.get.call_args
+        self.assertEqual(args[0], 'test')
+        self.assertEqual(kwargs['local_path'], 'tmp')
+        self.assertEqual(kwargs['recursive'], True)
+        self.assertEqual(result['changed'], True)
 
-        self.scp_mock.get.assert_called_once_with('test', local_path='tmp', recursive=True)
+    def test_junos_scp_device_param(self):
+        set_module_args(dict(src='test.txt',
+                             provider={'username': 'unit', 'host': 'test', 'ssh_keyfile': 'path',
+                                       'password': 'test', 'port': 234}))
+        self.execute_module(changed=True)
+        args, kwargs = jnpr_mock.junos.Device.call_args
+
+        self.assertEqual(args[0], 'test')
+        self.assertEqual(kwargs['passwd'], 'test')
+        self.assertEqual(kwargs['ssh_private_key_file'], 'path')
+        self.assertEqual(kwargs['port'], 234)
+        self.assertEqual(kwargs['user'], 'unit')

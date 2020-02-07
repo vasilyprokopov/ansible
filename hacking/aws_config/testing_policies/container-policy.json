@@ -14,9 +14,6 @@
             "Sid": "SpecifiedCodeRepositories",
             "Effect": "Allow",
             "Action": [
-                "ecr:GetLifecyclePolicy",
-                "ecr:PutLifecyclePolicy",
-                "ecr:DeleteLifecyclePolicy",
                 "ecr:GetRepositoryPolicy",
                 "ecr:SetRepositoryPolicy",
                 "ecr:DeleteRepository",

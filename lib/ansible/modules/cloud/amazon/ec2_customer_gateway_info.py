@@ -2,9 +2,6 @@
 # Copyright: Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
-
 ANSIBLE_METADATA = {'status': ['preview'],
                     'supported_by': 'community',
                     'metadata_version': '1.1'}
@@ -14,7 +11,7 @@ DOCUMENTATION = '''
 module: ec2_customer_gateway_info
 short_description: Gather information about customer gateways in AWS
 description:
-    - Gather information about customer gateways in AWS.
+    - Gather information about customer gateways in AWS
     - This module was called C(ec2_customer_gateway_facts) before Ansible 2.9. The usage did not change.
 version_added: "2.5"
 requirements: [ boto3 ]
@@ -24,12 +21,9 @@ options:
     description:
       - A dict of filters to apply. Each dict item consists of a filter key and a filter value.
         See U(https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeCustomerGateways.html) for possible filters.
-    type: dict
   customer_gateway_ids:
     description:
       - Get details of a specific customer gateways using customer gateway ID/IDs. This value should be provided as a list.
-    type: list
-    elements: str
 extends_documentation_fragment:
     - aws
     - ec2
@@ -88,7 +82,9 @@ except ImportError:
     pass  # caught by AnsibleAWSModule
 
 from ansible.module_utils.aws.core import AnsibleAWSModule
-from ansible.module_utils.ec2 import ansible_dict_to_boto3_filter_list, boto3_tag_list_to_ansible_dict, camel_dict_to_snake_dict
+from ansible.module_utils.ec2 import (ansible_dict_to_boto3_filter_list,
+                                      boto3_conn, boto3_tag_list_to_ansible_dict, camel_dict_to_snake_dict,
+                                      ec2_argument_spec, get_aws_connection_info)
 
 
 def date_handler(obj):
@@ -117,9 +113,12 @@ def list_customer_gateways(connection, module):
 
 def main():
 
-    argument_spec = dict(
-        customer_gateway_ids=dict(default=[], type='list'),
-        filters=dict(default={}, type='dict')
+    argument_spec = ec2_argument_spec()
+    argument_spec.update(
+        dict(
+            customer_gateway_ids=dict(default=[], type='list'),
+            filters=dict(default={}, type='dict')
+        )
     )
 
     module = AnsibleAWSModule(argument_spec=argument_spec,
@@ -128,7 +127,9 @@ def main():
     if module._module._name == 'ec2_customer_gateway_facts':
         module._module.deprecate("The 'ec2_customer_gateway_facts' module has been renamed to 'ec2_customer_gateway_info'", version='2.13')
 
-    connection = module.client('ec2')
+    region, ec2_url, aws_connect_params = get_aws_connection_info(module, boto3=True)
+
+    connection = boto3_conn(module, conn_type='client', resource='ec2', region=region, endpoint=ec2_url, **aws_connect_params)
 
     list_customer_gateways(connection, module)
 

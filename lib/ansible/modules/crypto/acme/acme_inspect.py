@@ -246,10 +246,7 @@ output_json:
 '''
 
 from ansible.module_utils.acme import (
-    ModuleFailException,
-    ACMEAccount,
-    handle_standard_module_arguments,
-    get_default_argspec,
+    ModuleFailException, ACMEAccount, set_crypto_backend,
 )
 
 from ansible.module_utils.basic import AnsibleModule
@@ -259,15 +256,20 @@ import json
 
 
 def main():
-    argument_spec = get_default_argspec()
-    argument_spec.update(dict(
-        url=dict(type='str'),
-        method=dict(type='str', choices=['get', 'post', 'directory-only'], default='get'),
-        content=dict(type='str'),
-        fail_on_acme_error=dict(type='bool', default=True),
-    ))
     module = AnsibleModule(
-        argument_spec=argument_spec,
+        argument_spec=dict(
+            account_key_src=dict(type='path', aliases=['account_key']),
+            account_key_content=dict(type='str', no_log=True),
+            account_uri=dict(type='str'),
+            acme_directory=dict(type='str', default='https://acme-staging.api.letsencrypt.org/directory'),
+            acme_version=dict(type='int', default=1, choices=[1, 2]),
+            validate_certs=dict(type='bool', default=True),
+            url=dict(type='str'),
+            method=dict(type='str', choices=['get', 'post', 'directory-only'], default='get'),
+            content=dict(type='str'),
+            fail_on_acme_error=dict(type='bool', default=True),
+            select_crypto_backend=dict(type='str', default='auto', choices=['auto', 'openssl', 'cryptography']),
+        ),
         mutually_exclusive=(
             ['account_key_src', 'account_key_content'],
         ),
@@ -278,7 +280,12 @@ def main():
             ['method', 'post', ['account_key_src', 'account_key_content'], True],
         ),
     )
-    handle_standard_module_arguments(module)
+    set_crypto_backend(module)
+
+    if not module.params.get('validate_certs'):
+        module.warn(warning='Disabling certificate validation for communications with ACME endpoint. ' +
+                            'This should only be done for testing against a local ACME server for ' +
+                            'development purposes, but *never* for production purposes.')
 
     result = dict()
     changed = False

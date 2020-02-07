@@ -90,8 +90,6 @@ EXAMPLES = '''
     state: present
     name: my-example
     namespace: default
-    values:
-      foo: "bar"
 
 - name: Install helm chart from a git repo specifying path
   helm:
@@ -104,19 +102,17 @@ EXAMPLES = '''
     state: present
     name: my-memcached
     namespace: default
-    values: "{{ lookup('file', '/path/to/file/values.yaml') | from_yaml }}"
 '''
 
-import traceback
-HELM_IMPORT_ERR = None
 try:
     import grpc
     from pyhelm import tiller
     from pyhelm import chartbuilder
-except ImportError:
-    HELM_IMPORT_ERR = traceback.format_exc()
+    HAS_PYHELM = True
+except ImportError as exc:
+    HAS_PYHELM = False
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible.module_utils.basic import AnsibleModule
 
 
 def install(module, tserver):
@@ -186,8 +182,9 @@ def main():
         ),
         supports_check_mode=True)
 
-    if HELM_IMPORT_ERR:
-        module.fail_json(msg=missing_required_lib('pyhelm'), exception=HELM_IMPORT_ERR)
+    if not HAS_PYHELM:
+        module.fail_json(msg="Could not import the pyhelm python module. "
+                         "Please install `pyhelm` package.")
 
     host = module.params['host']
     port = module.params['port']

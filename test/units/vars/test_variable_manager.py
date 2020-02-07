@@ -36,6 +36,12 @@ from ansible.vars.manager import VariableManager
 
 class TestVariableManager(unittest.TestCase):
 
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
     def test_basic_manager(self):
         fake_loader = DictDataLoader({})
 

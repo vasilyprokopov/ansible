@@ -100,5 +100,5 @@ class ActionModule(_ActionModule):
                     for role in dep_chain:
                         searchpath.append(role._role_path)
         searchpath.append(os.path.dirname(source))
-        with self._templar.set_temporary_context(searchpath=searchpath):
-            self._task.args['src'] = self._templar.template(template_data)
+        self._templar.environment.loader.searchpath = searchpath
+        self._task.args['src'] = self._templar.template(template_data)

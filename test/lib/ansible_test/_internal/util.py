@@ -45,17 +45,6 @@ except ImportError:
 
 from . import types as t
 
-from .encoding import (
-    to_bytes,
-    to_optional_bytes,
-    to_optional_text,
-)
-
-from .io import (
-    open_binary_file,
-    read_text_file,
-)
-
 try:
     C = t.TypeVar('C')
 except AttributeError:
@@ -106,6 +95,10 @@ MODE_FILE_WRITE = MODE_FILE | stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH
 MODE_DIRECTORY = MODE_READ | stat.S_IWUSR | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
 MODE_DIRECTORY_WRITE = MODE_DIRECTORY | stat.S_IWGRP | stat.S_IWOTH
 
+ENCODING = 'utf-8'
+
+Text = type(u'')
+
 REMOTE_ONLY_PYTHON_VERSIONS = (
     '2.6',
 )
@@ -118,6 +111,38 @@ SUPPORTED_PYTHON_VERSIONS = (
     '3.7',
     '3.8',
 )
+
+
+def to_optional_bytes(value, errors='strict'):  # type: (t.Optional[t.AnyStr], str) -> t.Optional[bytes]
+    """Return the given value as bytes encoded using UTF-8 if not already bytes, or None if the value is None."""
+    return None if value is None else to_bytes(value, errors)
+
+
+def to_optional_text(value, errors='strict'):  # type: (t.Optional[t.AnyStr], str) -> t.Optional[t.Text]
+    """Return the given value as text decoded using UTF-8 if not already text, or None if the value is None."""
+    return None if value is None else to_text(value, errors)
+
+
+def to_bytes(value, errors='strict'):  # type: (t.AnyStr, str) -> bytes
+    """Return the given value as bytes encoded using UTF-8 if not already bytes."""
+    if isinstance(value, bytes):
+        return value
+
+    if isinstance(value, Text):
+        return value.encode(ENCODING, errors)
+
+    raise Exception('value is not bytes or text: %s' % type(value))
+
+
+def to_text(value, errors='strict'):  # type: (t.AnyStr, str) -> t.Text
+    """Return the given value as text decoded using UTF-8 if not already text."""
+    if isinstance(value, bytes):
+        return value.decode(ENCODING, errors)
+
+    if isinstance(value, Text):
+        return value
+
+    raise Exception('value is not bytes or text: %s' % type(value))
 
 
 def get_docker_completion():
@@ -188,7 +213,8 @@ def read_lines_without_comments(path, remove_blank_lines=False, optional=False):
     if optional and not os.path.exists(path):
         return []
 
-    lines = read_text_file(path).splitlines()
+    with open(path, 'r') as path_fd:
+        lines = path_fd.read().splitlines()
 
     lines = [re.sub(r' *#.*$', '', line) for line in lines]
 
@@ -495,6 +521,17 @@ def remove_tree(path):
             raise
 
 
+def make_dirs(path):
+    """
+    :type path: str
+    """
+    try:
+        os.makedirs(to_bytes(path))
+    except OSError as ex:
+        if ex.errno != errno.EEXIST:
+            raise
+
+
 def is_binary_file(path):
     """
     :type path: str
@@ -550,8 +587,7 @@ def is_binary_file(path):
     if ext in assume_binary:
         return True
 
-    with open_binary_file(path) as path_fd:
-        # noinspection PyTypeChecker
+    with open(path, 'rb') as path_fd:
         return b'\0' in path_fd.read(1024)
 
 
@@ -600,7 +636,7 @@ class Display:
         self.rows = 0
         self.columns = 0
         self.truncate = 0
-        self.redact = True
+        self.redact = False
         self.sensitive = set()
 
         if os.isatty(0):
@@ -622,15 +658,11 @@ class Display:
         for warning in self.warnings:
             self.__warning(warning)
 
-    def warning(self, message, unique=False, verbosity=0):
+    def warning(self, message, unique=False):
         """
         :type message: str
         :type unique: bool
-        :type verbosity: int
         """
-        if verbosity > self.verbosity:
-            return
-
         if unique:
             if message in self.warnings_unique:
                 return
@@ -671,9 +703,6 @@ class Display:
         """
         if self.redact and self.sensitive:
             for item in self.sensitive:
-                if not item:
-                    continue
-
                 message = message.replace(item, '*' * len(item))
 
         if truncate:
@@ -807,11 +836,11 @@ def get_subclasses(class_type):  # type: (t.Type[C]) -> t.Set[t.Type[C]]
 
 def is_subdir(candidate_path, path):  # type: (str, str) -> bool
     """Returns true if candidate_path is path or a subdirectory of path."""
-    if not path.endswith(os.path.sep):
-        path += os.path.sep
+    if not path.endswith(os.sep):
+        path += os.sep
 
-    if not candidate_path.endswith(os.path.sep):
-        candidate_path += os.path.sep
+    if not candidate_path.endswith(os.sep):
+        candidate_path += os.sep
 
     return candidate_path.startswith(path)
 
@@ -842,10 +871,10 @@ def import_plugins(directory, root=None):  # type: (str, t.Optional[str]) -> Non
 
     path = os.path.join(root, directory)
     package = __name__.rsplit('.', 1)[0]
-    prefix = '%s.%s.' % (package, directory.replace(os.path.sep, '.'))
+    prefix = '%s.%s.' % (package, directory.replace(os.sep, '.'))
 
     for (_module_loader, name, _ispkg) in pkgutil.iter_modules([path], prefix=prefix):
-        module_path = os.path.join(root, name[len(package) + 1:].replace('.', os.path.sep) + '.py')
+        module_path = os.path.join(root, name[len(package) + 1:].replace('.', os.sep) + '.py')
         load_module(module_path, name)
 
 
@@ -880,8 +909,7 @@ def load_module(path, name):  # type: (str, str) -> None
         # noinspection PyDeprecation
         import imp
 
-        # load_source (and thus load_module) require a file opened with `open` in text mode
-        with open(to_bytes(path)) as module_file:
+        with open(path, 'r') as module_file:
             # noinspection PyDeprecation
             imp.load_module(name, module_file, path, ('.py', 'r', imp.PY_SOURCE))
 

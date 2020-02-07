@@ -54,7 +54,7 @@ options:
     type: str
   destination:
     description:
-      - Destination object of the access rule.
+      - Destionation object of the access rule.
     type: str
   action:
     description:

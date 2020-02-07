@@ -82,7 +82,7 @@ EXAMPLES = """
 
 - name: Configure interfaces
   nxos_bfd_interfaces:
-    state: deleted
+    operation: deleted
 
 
 # Using merged
@@ -96,7 +96,7 @@ EXAMPLES = """
       - name: Ethernet1/2
         bfd: disable
         echo: disable
-    state: merged
+    operation: merged
 
 
 # Using overridden
@@ -110,7 +110,7 @@ EXAMPLES = """
       - name: Ethernet1/2
         bfd: disable
         echo: disable
-    state: overridden
+    operation: overridden
 
 
 # Using replaced
@@ -124,7 +124,7 @@ EXAMPLES = """
       - name: Ethernet1/2
         bfd: disable
         echo: disable
-    state: replaced
+    operation: replaced
 
 
 """

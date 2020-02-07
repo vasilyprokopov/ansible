@@ -12,6 +12,7 @@ from ..sanity import (
     SanitySingleVersion,
     SanityFailure,
     SanitySuccess,
+    SanityMessage,
 )
 
 from ..target import (

@@ -85,9 +85,7 @@ class Lldp_InterfacesFacts(object):
         """
         config = deepcopy(spec)
         match = re.search(r'^(\S+)(:)', conf)
-        intf = ''
-        if match:
-            intf = match.group(1)
+        intf = match.group(1)
 
         if get_interface_type(intf) == 'unknown':
             return {}

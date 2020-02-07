@@ -2,9 +2,6 @@
 # Copyright (c) 2017 Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
-
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'community'
@@ -14,32 +11,29 @@ DOCUMENTATION = '''
 ---
 module: aws_elasticbeanstalk_app
 
-short_description: Create, update, and delete an elastic beanstalk application
+short_description: create, update, and delete an elastic beanstalk application
 
 version_added: "2.5"
 
 description:
-    - Creates, updates, deletes beanstalk applications if app_name is provided.
+    - "creates, updates, deletes beanstalk applications if app_name is provided"
 
 options:
   app_name:
     description:
-      - Name of the beanstalk application you wish to manage.
+      - name of the beanstalk application you wish to manage
     aliases: [ 'name' ]
-    type: str
   description:
     description:
-      - The description of the application.
-    type: str
+      - the description of the application
   state:
     description:
-      - Whether to ensure the application is present or absent.
+      - whether to ensure the application is present or absent
     default: present
     choices: ['absent','present']
-    type: str
   terminate_by_force:
     description:
-      - When I(terminate_by_force=true), running environments will be terminated before deleting the application.
+      - when set to true, running environments will be terminated before deleting the application
     default: false
     type: bool
 author:
@@ -66,7 +60,7 @@ EXAMPLES = '''
 
 RETURN = '''
 app:
-    description: Beanstalk application.
+    description: beanstalk application
     returned: always
     type: dict
     sample: {
@@ -81,7 +75,7 @@ app:
         ]
     }
 output:
-    description: Message indicating what change will occur.
+    description: message indicating what change will occur
     returned: in check mode
     type: str
     sample: App is up-to-date
@@ -93,6 +87,7 @@ except ImportError:
     pass  # handled by AnsibleAWSModule
 
 from ansible.module_utils.aws.core import AnsibleAWSModule
+from ansible.module_utils.ec2 import boto3_conn, ec2_argument_spec, get_aws_connection_info
 
 
 def describe_app(ebs, app_name, module):
@@ -146,11 +141,15 @@ def filter_empty(**kwargs):
 
 
 def main():
-    argument_spec = dict(
-        app_name=dict(aliases=['name'], type='str', required=False),
-        description=dict(),
-        state=dict(choices=['present', 'absent'], default='present'),
-        terminate_by_force=dict(type='bool', default=False, required=False)
+    argument_spec = ec2_argument_spec()
+
+    argument_spec.update(
+        dict(
+            app_name=dict(aliases=['name'], type='str', required=False),
+            description=dict(),
+            state=dict(choices=['present', 'absent'], default='present'),
+            terminate_by_force=dict(type='bool', default=False, required=False)
+        )
     )
 
     module = AnsibleAWSModule(argument_spec=argument_spec, supports_check_mode=True)
@@ -164,8 +163,9 @@ def main():
         module.fail_json(msg='Module parameter "app_name" is required')
 
     result = {}
-
-    ebs = module.client('elasticbeanstalk')
+    region, ec2_url, aws_connect_params = get_aws_connection_info(module, boto3=True)
+    ebs = boto3_conn(module, conn_type='client', resource='elasticbeanstalk',
+                     region=region, endpoint=ec2_url, **aws_connect_params)
 
     app = describe_app(ebs, app_name, module)
 

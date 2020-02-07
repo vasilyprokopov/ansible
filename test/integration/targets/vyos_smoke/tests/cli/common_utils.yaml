@@ -1,4 +1,3 @@
----
 # vyos.py in plugins and module_utils/network covered by these as well
 # remove_default_spec() hit by multiple plays
 
@@ -21,7 +20,7 @@
 - name: enable eth1
   vyos_interface:
     name: eth1
-    enabled: true
+    enabled: True
     state: present
   register: result
 
@@ -35,7 +34,7 @@
   vyos_interface:
     name: eth1
     state: down
-  ignore_errors: true
+  ignore_errors: yes
   register: result
 
 - assert:
@@ -46,5 +45,5 @@
 - name: Config + intent
   vyos_interface:
     name: eth1
-    enabled: false
+    enabled: False
     state: down

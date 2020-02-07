@@ -1,6 +1,3 @@
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
-
 from ansible.inventory.group import to_safe_group_name
 
 

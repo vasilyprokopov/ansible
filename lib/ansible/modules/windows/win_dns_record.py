@@ -51,7 +51,7 @@ options:
   value:
     description:
     - The value(s) to specify. Required when C(state=present).
-    - When C(type=PTR) only the partial part of the IP should be given.
+    - When c(type=PTR) only the partial part of the IP should be given.
     aliases: [ values ]
     type: list
   zone:

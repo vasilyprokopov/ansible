@@ -54,34 +54,34 @@ result:
     contains:
         _ref:
             description: The reference name of the object
-            type: str
+            type: string
         _locked:
             description: Whether or not the object is currently locked
-            type: bool
+            type: boolean
         _type:
             description: The type of the object
-            type: str
+            type: string
         name:
             description: The name of the object
-            type: str
+            type: string
         access_control:
             description: Whether to use access control state
-            type: str
+            type: string
         allowed_networks:
             description: List of allowed network reference names
             type: list
         auth_profile:
             description: The auth profile reference name
-            type: str
+            type: string
         backend:
             description: The backend reference name
-            type: str
+            type: string
         be_path:
             description: The backend path
-            type: str
+            type: string
         comment:
             description: The comment string
-            type: str
+            type: string
         denied_networks:
             description: The list of the denied network names
             type: list
@@ -90,13 +90,13 @@ result:
             type: bool
         path:
             description: Path name
-            type: str
+            type: string
         status:
             description: Whether the object is active or not
-            type: bool
+            type: boolean
         stickysession_id:
             description: The identifier of the stickysession
-            type: str
+            type: string
         stickysession_status:
             description: Whether to use stickysession or not
             type: bool

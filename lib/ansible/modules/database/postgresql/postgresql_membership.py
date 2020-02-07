@@ -32,7 +32,6 @@ options:
     - The list of groups (roles) that need to be granted to or revoked from I(target_roles).
     required: yes
     type: list
-    elements: str
     aliases:
     - group
     - source_role
@@ -42,7 +41,6 @@ options:
     - The list of target roles (groups will be granted to them).
     required: yes
     type: list
-    elements: str
     aliases:
     - target_role
     - users
@@ -156,8 +154,8 @@ from ansible.module_utils.postgres import (
 def main():
     argument_spec = postgres_common_argument_spec()
     argument_spec.update(
-        groups=dict(type='list', elements='str', required=True, aliases=['group', 'source_role', 'source_roles']),
-        target_roles=dict(type='list', elements='str', required=True, aliases=['target_role', 'user', 'users']),
+        groups=dict(type='list', aliases=['group', 'source_role', 'source_roles']),
+        target_roles=dict(type='list', aliases=['target_role', 'user', 'users']),
         fail_on_role=dict(type='bool', default=True),
         state=dict(type='str', default='present', choices=['absent', 'present']),
         db=dict(type='str', aliases=['login_db']),

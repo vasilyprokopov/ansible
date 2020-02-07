@@ -12,12 +12,12 @@
 - name: Setup
   nxos_config:
     lines:
-      - no interface port-channel 10
+      - "no channel-group"
+    parents: "{{ item }}"
   ignore_errors: yes
-
-- name: setup2
-  nxos_lag_interfaces: &remove_lags
-    state: deleted
+  loop:
+    - "interface {{ test_int1 }}"
+    - "interface {{ test_int2 }}"
 
 - block:
   - name: Merged
@@ -56,8 +56,14 @@
 
   always:
   - name: Teardown
-    nxos_lag_interfaces: *remove_lags
+    nxos_config:
+      lines:
+        - "no channel-group"
+      parents: "{{ item }}"
     ignore_errors: yes
+    loop:
+      - "interface {{ test_int1 }}"
+      - "interface {{ test_int2 }}"
 
   - name: Disable feature lacp
     nxos_feature:

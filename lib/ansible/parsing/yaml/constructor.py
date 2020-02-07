@@ -76,10 +76,7 @@ class AnsibleConstructor(SafeConstructor):
                 if C.DUPLICATE_YAML_DICT_KEY == 'warn':
                     display.warning(msg)
                 elif C.DUPLICATE_YAML_DICT_KEY == 'error':
-                    raise ConstructorError(context=None, context_mark=None,
-                                           problem=to_native(msg),
-                                           problem_mark=node.start_mark,
-                                           note=None)
+                    raise ConstructorError(to_native(msg))
                 else:
                     # when 'ignore'
                     display.debug(msg)

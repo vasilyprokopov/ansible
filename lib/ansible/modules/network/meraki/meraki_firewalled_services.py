@@ -135,7 +135,10 @@ data:
         sample: 192.0.1.0
 '''
 
-from ansible.module_utils.basic import AnsibleModule, json
+import os
+from ansible.module_utils.basic import AnsibleModule, json, env_fallback
+from ansible.module_utils.urls import fetch_url
+from ansible.module_utils._text import to_native
 from ansible.module_utils.common.dict_transformations import recursive_diff
 from ansible.module_utils.network.meraki.meraki import MerakiModule, meraki_argument_spec
 
@@ -152,7 +155,7 @@ def main():
         state=dict(type='str', default='present', choices=['query', 'present']),
         service=dict(type='str', default=None, choices=['ICMP', 'SNMP', 'web']),
         access=dict(type='str', choices=['blocked', 'restricted', 'unrestricted']),
-        allowed_ips=dict(type='list', elements='str'),
+        allowed_ips=dict(type='list', element='str'),
     )
 
     mutually_exclusive = [('net_name', 'net_id')]
@@ -181,7 +184,7 @@ def main():
     org_id = meraki.params['org_id']
     if not org_id:
         org_id = meraki.get_org_id(meraki.params['org_name'])
-    net_id = meraki.params['net_id']
+    net_id = None
     if net_id is None:
         nets = meraki.get_nets(org_id=org_id)
         net_id = meraki.get_net_id(org_id, meraki.params['net_name'], data=nets)

@@ -25,28 +25,23 @@ options:
       - Ensure NAT Gateway is present or absent.
     default: "present"
     choices: ["present", "absent"]
-    type: str
   nat_gateway_id:
     description:
       - The id AWS dynamically allocates to the NAT Gateway on creation.
         This is required when the absent option is present.
-    type: str
   subnet_id:
     description:
       - The id of the subnet to create the NAT Gateway in. This is required
         with the present option.
-    type: str
   allocation_id:
     description:
       - The id of the elastic IP allocation. If this is not passed and the
         eip_address is not passed. An EIP is generated for this NAT Gateway.
-    type: str
   eip_address:
     description:
       - The elastic IP address of the EIP you want attached to this NAT Gateway.
         If this is not passed and the allocation_id is not passed,
         an EIP is generated for this NAT Gateway.
-    type: str
   if_exist_do_not_create:
     description:
       - if a NAT Gateway exists already in the subnet_id, then do not create a new one.
@@ -58,24 +53,22 @@ options:
       - Deallocate the EIP from the VPC.
       - Option is only valid with the absent state.
       - You should use this with the wait option. Since you can not release an address while a delete operation is happening.
-    default: false
+    default: 'yes'
     type: bool
   wait:
     description:
       - Wait for operation to complete before returning.
-    default: false
+    default: 'no'
     type: bool
   wait_timeout:
     description:
       - How many seconds to wait for an operation to complete before timing out.
-    default: 320
-    type: int
+    default: 300
   client_token:
     description:
       - Optional unique token to be used during create to ensure idempotency.
         When specifying this option, ensure you specify the eip_address parameter
         as well otherwise any subsequent runs will fail.
-    type: str
 author:
   - Allen Sanabria (@linuxdynasty)
   - Jon Hadfield (@jonhadfield)
@@ -110,7 +103,7 @@ EXAMPLES = '''
     state: present
     subnet_id: subnet-12345678
     eip_address: 52.1.1.1
-    wait: true
+    wait: yes
     region: ap-southeast-2
   register: new_nat_gateway
 
@@ -118,7 +111,7 @@ EXAMPLES = '''
   ec2_vpc_nat_gateway:
     state: present
     subnet_id: subnet-12345678
-    wait: true
+    wait: yes
     region: ap-southeast-2
   register: new_nat_gateway
 
@@ -126,7 +119,7 @@ EXAMPLES = '''
   ec2_vpc_nat_gateway:
     state: present
     subnet_id: subnet-12345678
-    wait: true
+    wait: yes
     region: ap-southeast-2
     if_exist_do_not_create: true
   register: new_nat_gateway
@@ -135,9 +128,9 @@ EXAMPLES = '''
   ec2_vpc_nat_gateway:
     state: absent
     region: ap-southeast-2
-    wait: true
+    wait: yes
     nat_gateway_id: "{{ item.NatGatewayId }}"
-    release_eip: true
+    release_eip: yes
   register: delete_nat_gateway_result
   loop: "{{ gateways_to_remove.result }}"
 
@@ -145,7 +138,7 @@ EXAMPLES = '''
   ec2_vpc_nat_gateway:
     state: absent
     nat_gateway_id: nat-12345678
-    wait: true
+    wait: yes
     wait_timeout: 500
     region: ap-southeast-2
 
@@ -153,7 +146,7 @@ EXAMPLES = '''
   ec2_vpc_nat_gateway:
     state: absent
     nat_gateway_id: nat-12345678
-    release_eip: true
+    release_eip: yes
     wait: yes
     wait_timeout: 300
     region: ap-southeast-2
@@ -454,7 +447,7 @@ def gateway_in_subnet_exists(client, subnet_id, allocation_id=None,
     allocation_id_exists = False
     gateways = []
     states = ['available', 'pending']
-    gws_retrieved, err_msg, gws = (
+    gws_retrieved, _, gws = (
         get_nat_gateways(
             client, subnet_id, states=states, check_mode=check_mode
         )
@@ -881,7 +874,7 @@ def remove(client, nat_gateway_id, wait=False, wait_timeout=0,
     results = list()
     states = ['pending', 'available']
     try:
-        exist, err_msg, gw = (
+        exist, _, gw = (
             get_nat_gateways(
                 client, nat_gateway_id=nat_gateway_id,
                 states=states, check_mode=check_mode

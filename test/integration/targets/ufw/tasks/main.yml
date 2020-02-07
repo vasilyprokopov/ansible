@@ -7,10 +7,8 @@
 - name: Install iptables (SuSE only)
   package:
     name: iptables
-  become: yes
   when: ansible_os_family == 'Suse'
 - name: Install ufw
-  become: yes
   package:
     name: ufw
 
@@ -19,7 +17,6 @@
   - include_tasks: run-test.yml
     with_fileglob:
     - "tests/*.yml"
-  become: yes
 
   # Cleanup
   always:

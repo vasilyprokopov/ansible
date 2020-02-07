@@ -78,11 +78,10 @@ EXAMPLES = '''
 
 from distutils.version import LooseVersion
 import os
-import platform
 import re
 import stat
 
-from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.basic import AnsibleModule, get_platform
 
 
 class Device(object):
@@ -282,7 +281,7 @@ class F2fs(Filesystem):
 
 
 class VFAT(Filesystem):
-    if platform.system() == 'FreeBSD':
+    if get_platform() == 'FreeBSD':
         MKFS = "newfs_msdos"
     else:
         MKFS = 'mkfs.vfat'

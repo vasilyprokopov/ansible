@@ -24,19 +24,16 @@ options:
     description:
       - The VPC ID for the VPC in which to manage the Internet Gateway.
     required: true
-    type: str
   tags:
     description:
       - "A dict of tags to apply to the internet gateway. Any tags currently applied to the internet gateway and not present here will be removed."
     aliases: [ 'resource_tags' ]
     version_added: "2.4"
-    type: dict
   state:
     description:
       - Create or terminate the IGW
     default: present
     choices: [ 'present', 'absent' ]
-    type: str
 extends_documentation_fragment:
     - aws
     - ec2
@@ -88,11 +85,14 @@ vpc_id:
 try:
     import botocore
 except ImportError:
-    pass  # caught by AnsibleAWSModule
+    pass  # Handled by AnsibleAWSModule
 
 from ansible.module_utils.aws.core import AnsibleAWSModule
 from ansible.module_utils.ec2 import (
     AWSRetry,
+    boto3_conn,
+    ec2_argument_spec,
+    get_aws_connection_info,
     camel_dict_to_snake_dict,
     boto3_tag_list_to_ansible_dict,
     ansible_dict_to_boto3_filter_list,
@@ -254,10 +254,13 @@ class AnsibleEc2Igw(object):
 
 
 def main():
-    argument_spec = dict(
-        vpc_id=dict(required=True),
-        state=dict(default='present', choices=['present', 'absent']),
-        tags=dict(default=dict(), required=False, type='dict', aliases=['resource_tags'])
+    argument_spec = ec2_argument_spec()
+    argument_spec.update(
+        dict(
+            vpc_id=dict(required=True),
+            state=dict(default='present', choices=['present', 'absent']),
+            tags=dict(default=dict(), required=False, type='dict', aliases=['resource_tags'])
+        )
     )
 
     module = AnsibleAWSModule(

@@ -46,12 +46,6 @@ options:
      description:
        - Volume name or id to create from
      version_added: "2.3"
-   bootable:
-     description:
-       - Bootable flag for volume.
-     type: bool
-     default: False
-     version_added: "2.10"
    state:
      description:
        - Should the resource be present or absent.
@@ -172,7 +166,6 @@ def _present_volume(module, cloud):
         display_name=module.params['display_name'],
         display_description=module.params['display_description'],
         snapshot_id=module.params['snapshot_id'],
-        bootable=module.params['bootable'],
         availability_zone=module.params['availability_zone'],
     )
     if module.params['image']:
@@ -235,8 +228,7 @@ def main():
         volume=dict(default=None),
         state=dict(default='present', choices=['absent', 'present']),
         scheduler_hints=dict(default=None, type='dict'),
-        metadata=dict(default=None, type='dict'),
-        bootable=dict(type='bool', default=False)
+        metadata=dict(default=None, type='dict')
     )
     module_kwargs = openstack_module_kwargs(
         mutually_exclusive=[

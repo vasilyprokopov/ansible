@@ -256,7 +256,7 @@ from functools import partial
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import exec_command
 from ansible.module_utils.network.ios.ios import load_config, get_config
-from ansible.module_utils.network.ios.ios import ios_argument_spec
+from ansible.module_utils.network.ios.ios import ios_argument_spec, check_args
 from ansible.module_utils.network.common.config import NetworkConfig
 from ansible.module_utils.six import iteritems
 
@@ -283,7 +283,11 @@ def get_interface_type(interface):
 
 def add_command_to_vrf(name, cmd, commands):
     if 'vrf definition %s' % name not in commands:
-        commands.extend(['vrf definition %s' % name])
+        commands.extend([
+            'vrf definition %s' % name,
+            'address-family ipv4', 'exit',
+            'address-family ipv6', 'exit',
+        ])
     commands.append(cmd)
 
 
@@ -303,13 +307,11 @@ def map_obj_to_commands(updates, module):
             continue
 
         if not have.get('state'):
-            commands.extend(['vrf definition %s' % want['name']])
-            ipv6 = len([k for k, v in module.params.items() if (k.endswith('_ipv6') or k.endswith('_both')) and v]) != 0
-            ipv4 = len([k for k, v in module.params.items() if (k.endswith('_ipv4') or k.endswith('_both')) and v]) != 0
-            if ipv4:
-                commands.extend(['address-family ipv4', 'exit'])
-            if ipv6:
-                commands.extend(['address-family ipv6', 'exit'])
+            commands.extend([
+                'vrf definition %s' % want['name'],
+                'address-family ipv4', 'exit',
+                'address-family ipv6', 'exit',
+            ])
 
         if needs_update(want, have, 'description'):
             cmd = 'description %s' % want['description']
@@ -689,6 +691,7 @@ def main():
     result = {'changed': False}
 
     warnings = list()
+    check_args(module, warnings)
     result['warnings'] = warnings
 
     want = map_params_to_obj(module)

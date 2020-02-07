@@ -25,24 +25,45 @@
     or (ansible_os_family == "RedHat" and ansible_distribution_major_version == '6')
     or ansible_os_family == "Suse"
     or ansible_distribution == 'Fedora'
-    or (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == '7')
+    or (ansible_distribution == 'CentOS' and ansible_distribution_version == '7')
 
 # Ubuntu
-- name: Import MongoDB public GPG Key
+- name: Import MongoDB public GPG Key xenial
   apt_key:
-    keyserver: "{{ apt.keyserver }}"
-    id: "{{ apt.keyserver_id }}"
+    keyserver: "{{ apt_xenial.keyserver }}"
+    id: "{{ apt_xenial.keyserver_id }}"
   when:
-    - ansible_distribution_version in ["16.04", "18.04"]
+    - ansible_distribution_version == "16.04"
     - ansible_distribution == 'Ubuntu'
 
-- name: Add MongoDB repository into sources list
+- name: Add MongoDB repository into sources list xenial
   apt_repository:
-    repo: "{{ apt.repo }}"
+    repo: "{{ apt_xenial.repo }}"
     state: present
-    update_cache: yes
   when:
-    - ansible_distribution_version in ["16.04", "18.04"]
+    - ansible_distribution_version == "16.04"
+    - ansible_distribution == 'Ubuntu'
+
+- name: Import MongoDB public GPG Key bionic
+  apt_key:
+    keyserver: "{{ apt_bionic.keyserver }}"
+    id: "{{ apt_bionic.keyserver_id }}"
+  when:
+    - ansible_distribution_version == "18.04"
+    - ansible_distribution == 'Ubuntu'
+
+- name: Add MongoDB repository into sources list bionic
+  apt_repository:
+    repo: "{{ apt_bionic.repo }}"
+    state: present
+  when:
+    - ansible_distribution_version == "18.04"
+    - ansible_distribution == 'Ubuntu'
+
+- name: Update apt keys
+  shell: apt-key update && apt-get update
+  when:
+    - mongodb_version != "4.0"
     - ansible_distribution == 'Ubuntu'
 
 # Need to handle various platforms here. Package name will not always be the same

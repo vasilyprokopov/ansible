@@ -103,7 +103,7 @@ EXAMPLES = '''
 - name: Get information about the repository whether or not it has already been cloned locally
 - subversion:
     repo: svn+ssh://an.example.org/path/to/repo
-    dest: /src/checkout
+    dest: /srv/checkout
     checkout: no
     update: no
 '''

@@ -180,7 +180,7 @@ commands:
 import re
 
 from ansible.module_utils.network.nxos.nxos import get_config, load_config
-from ansible.module_utils.network.nxos.nxos import nxos_argument_spec
+from ansible.module_utils.network.nxos.nxos import nxos_argument_spec, check_args
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.network.common.config import CustomNetworkConfig
 
@@ -327,11 +327,8 @@ def state_present(module, existing, proposed, candidate):
             commands.append('no {0}'.format(key))
         elif value == 'default':
             if existing_commands.get(key):
-                if key == 'password':
-                    commands.append("no password")
-                else:
-                    existing_value = existing_commands.get(key)
-                    commands.append('no {0} {1}'.format(key, existing_value))
+                existing_value = existing_commands.get(key)
+                commands.append('no {0} {1}'.format(key, existing_value))
         else:
             if key == 'log-neighbor-changes':
                 if value == 'enable':
@@ -437,6 +434,7 @@ def main():
     )
 
     warnings = list()
+    check_args(module, warnings)
     result = dict(changed=False, warnings=warnings)
 
     state = module.params['state']
@@ -474,8 +472,7 @@ def main():
 
     if candidate:
         candidate = candidate.items_text()
-        if not module.check_mode:
-            load_config(module, candidate)
+        load_config(module, candidate)
         result['changed'] = True
         result['commands'] = candidate
     else:

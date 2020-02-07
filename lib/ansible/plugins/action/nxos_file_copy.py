@@ -21,9 +21,11 @@ import copy
 import hashlib
 import os
 import re
+import time
 
 from ansible.errors import AnsibleError
-from ansible.module_utils._text import to_text, to_bytes
+from ansible.module_utils._text import to_text, to_bytes, to_native
+from ansible.module_utils.common import validation
 from ansible.module_utils.connection import Connection
 from ansible.plugins.action import ActionBase
 from ansible.utils.display import Display
@@ -57,9 +59,9 @@ class ActionModule(ActionBase):
             file_pull_timeout=dict(type='int', default=300),
             file_pull_compact=dict(type='bool', default=False),
             file_pull_kstack=dict(type='bool', default=False),
-            local_file=dict(type='str'),
-            local_file_directory=dict(type='str'),
-            remote_file=dict(type='str'),
+            local_file=dict(type='path'),
+            local_file_directory=dict(type='path'),
+            remote_file=dict(type='path'),
             remote_scp_server=dict(type='str'),
             remote_scp_server_user=dict(type='str'),
             remote_scp_server_password=dict(no_log=True),
@@ -71,24 +73,23 @@ class ActionModule(ActionBase):
             playvals[key] = self._task.args.get(key, argument_spec[key].get('default'))
             if playvals[key] is None:
                 continue
-            if argument_spec[key].get('type') is None:
-                argument_spec[key]['type'] = 'str'
-            type_ok = False
-            type = argument_spec[key]['type']
-            if type == 'str':
-                if isinstance(playvals[key], six.string_types):
-                    type_ok = True
-            elif type == 'int':
-                if isinstance(playvals[key], int):
-                    type_ok = True
-            elif type == 'bool':
-                if isinstance(playvals[key], bool):
-                    type_ok = True
-            else:
-                raise AnsibleError('Unrecognized type <{0}> for playbook parameter <{1}>'.format(type, key))
 
-            if not type_ok:
-                raise AnsibleError('Playbook parameter <{0}> value should be of type <{1}>'.format(key, type))
+            option_type = argument_spec[key].get('type', 'str')
+            try:
+                if option_type == 'str':
+                    playvals[key] = validation.check_type_str(playvals[key])
+                elif option_type == 'int':
+                    playvals[key] = validation.check_type_int(playvals[key])
+                elif option_type == 'bool':
+                    playvals[key] = validation.check_type_bool(playvals[key])
+                elif option_type == 'path':
+                    playvals[key] = validation.check_type_path(playvals[key])
+                else:
+                    raise AnsibleError('Unrecognized type <{0}> for playbook parameter <{1}>'.format(option_type, key))
+
+            except (TypeError, ValueError) as e:
+                raise AnsibleError("argument %s is of type %s and we were unable to convert to %s: %s"
+                                   % (key, type(playvals[key]), option_type, to_native(e)))
 
         # Validate playbook dependencies
         if playvals['file_pull']:
@@ -98,14 +99,12 @@ class ActionModule(ActionBase):
                 raise AnsibleError('Playbook parameter <remote_scp_server> required when <file_pull> is True')
 
         if playvals['remote_scp_server'] or \
-           playvals['remote_scp_server_user'] or \
-           playvals['remote_scp_server_password']:
+           playvals['remote_scp_server_user']:
 
             if None in (playvals['remote_scp_server'],
-                        playvals['remote_scp_server_user'],
-                        playvals['remote_scp_server_password']):
-                params = '<remote_scp_server>, <remote_scp_server_user>, ,remote_scp_server_password>'
-                raise AnsibleError('Playbook parameters {0} must all be set together'.format(params))
+                        playvals['remote_scp_server_user']):
+                params = '<remote_scp_server>, <remote_scp_server_user>'
+                raise AnsibleError('Playbook parameters {0} must be set together'.format(params))
 
         return playvals
 
@@ -285,8 +284,8 @@ class ActionModule(ActionBase):
             # 14) - Copy completed without issues
             # 15) - nxos_router_prompt#
             # 16) - pexpect timeout
-            possible_outcomes = ['yes',
-                                 '(?i)Password',
+            possible_outcomes = [r'sure you want to continue connecting \(yes/no\)\? ',
+                                 '(?i)Password: ',
                                  'file existing with this name',
                                  'timed out',
                                  '(?i)No space.*#',
@@ -329,11 +328,11 @@ class ActionModule(ActionBase):
                 # The before property will contain all text up to the expected string pattern.
                 # The after string will contain the text that was matched by the expected pattern.
                 outcome['expect_timeout'] = True
-                outcome['error_data'] = 'Expect Timeout error occured: BEFORE {0} AFTER {1}'.format(session.before, session.after)
+                outcome['error_data'] = 'Expect Timeout error occurred: BEFORE {0} AFTER {1}'.format(session.before, session.after)
                 return outcome
             else:
                 outcome['error'] = True
-                outcome['error_data'] = 'Unrecognized error occured: BEFORE {0} AFTER {1}'.format(session.before, session.after)
+                outcome['error_data'] = 'Unrecognized error occurred: BEFORE {0} AFTER {1}'.format(session.before, session.after)
                 return outcome
 
             return outcome
@@ -341,27 +340,41 @@ class ActionModule(ActionBase):
         # Spawn pexpect connection to NX-OS device.
         nxos_session = pexpect.spawn('ssh ' + nxos_username + '@' + nxos_hostname + ' -p' + str(port))
         # There might be multiple user_response_required prompts or intermittent timeouts
-        # spawning the expect session so loop up to 5 times during the spwan process.
-        for connect_attempt in range(6):
+        # spawning the expect session so loop up to 24 times during the spawn process.
+        max_attempts = 24
+        for connect_attempt in range(max_attempts):
             outcome = process_outcomes(nxos_session)
             if outcome['user_response_required']:
                 nxos_session.sendline('yes')
                 continue
             if outcome['password_prompt_detected']:
+                time.sleep(3)
                 nxos_session.sendline(nxos_password)
                 continue
             if outcome['final_prompt_detected']:
                 break
             if outcome['error'] or outcome['expect_timeout']:
+                # Error encountered, try to spawn expect session n more times up to max_attempts - 1
+                if connect_attempt < max_attempts:
+                    outcome['error'] = False
+                    outcome['expect_timeout'] = False
+                    nxos_session.close()
+                    nxos_session = pexpect.spawn('ssh ' + nxos_username + '@' + nxos_hostname + ' -p' + str(port))
+                    continue
                 self.results['failed'] = True
+                outcome['error_data'] = re.sub(nxos_password, '', outcome['error_data'])
                 self.results['error_data'] = 'Failed to spawn expect session! ' + outcome['error_data']
+                nxos_session.close()
                 return
         else:
             # The before property will contain all text up to the expected string pattern.
             # The after string will contain the text that was matched by the expected pattern.
             msg = 'After {0} attempts, failed to spawn pexpect session to {1}'
             msg += 'BEFORE: {2}, AFTER: {3}'
-            raise AnsibleError(msg.format(connect_attempt, nxos_hostname, nxos_session.before, nxos_session.before))
+            error_msg = msg.format(connect_attempt, nxos_hostname, nxos_session.before, nxos_session.after)
+            re.sub(nxos_password, '', error_msg)
+            nxos_session.close()
+            raise AnsibleError(error_msg)
 
         # Create local file directory under NX-OS filesystem if
         # local_file_directory playbook parameter is set.
@@ -375,6 +388,7 @@ class ActionModule(ActionBase):
                     if outcome['error'] or outcome['expect_timeout']:
                         self.results['mkdir_cmd'] = mkdir_cmd
                         self.results['failed'] = True
+                        outcome['error_data'] = re.sub(nxos_password, '', outcome['error_data'])
                         self.results['error_data'] = outcome['error_data']
                         return
                     local_dir_root += each + '/'
@@ -389,7 +403,12 @@ class ActionModule(ActionBase):
                 nxos_session.sendline('yes')
                 continue
             if outcome['password_prompt_detected']:
-                nxos_session.sendline(self.playvals['remote_scp_server_password'])
+                if self.playvals.get('remote_scp_server_password'):
+                    nxos_session.sendline(self.playvals['remote_scp_server_password'])
+                else:
+                    err_msg = 'Remote scp server {0} requires a password.'.format(rserver)
+                    err_msg += ' Set the <remote_scp_server_password> playbook parameter or configure nxos device for passwordless scp'
+                    raise AnsibleError(err_msg)
                 continue
             if outcome['existing_file_with_same_name']:
                 nxos_session.sendline('y')
@@ -399,14 +418,25 @@ class ActionModule(ActionBase):
                 break
             if outcome['error'] or outcome['expect_timeout']:
                 self.results['failed'] = True
+                outcome['error_data'] = re.sub(nxos_password, '', outcome['error_data'])
+                if self.playvals.get('remote_scp_server_password'):
+                    outcome['error_data'] = re.sub(self.playvals['remote_scp_server_password'], '', outcome['error_data'])
                 self.results['error_data'] = outcome['error_data']
+                nxos_session.close()
                 return
         else:
             # The before property will contain all text up to the expected string pattern.
             # The after string will contain the text that was matched by the expected pattern.
             msg = 'After {0} attempts, failed to copy file to {1}'
             msg += 'BEFORE: {2}, AFTER: {3}, CMD: {4}'
-            raise AnsibleError(msg.format(copy_attempt, nxos_hostname, nxos_session.before, nxos_session.before, copy_cmd))
+            error_msg = msg.format(copy_attempt, nxos_hostname, nxos_session.before, nxos_session.before, copy_cmd)
+            re.sub(nxos_password, '', error_msg)
+            if self.playvals.get('remote_scp_server_password'):
+                re.sub(self.playvals['remote_scp_server_password'], '', error_msg)
+            nxos_session.close()
+            raise AnsibleError(error_msg)
+
+        nxos_session.close()
 
     def file_pull(self):
         local_file = self.playvals['local_file']
@@ -436,10 +466,10 @@ class ActionModule(ActionBase):
         self.play_context = copy.deepcopy(self._play_context)
         self.results = super(ActionModule, self).run(task_vars=task_vars)
 
-        if self.play_context.connection != 'network_cli':
+        if self.play_context.connection.split('.')[-1] != 'network_cli':
             # Plugin is supported only with network_cli
             self.results['failed'] = True
-            self.results['msg'] = ('Connection type must be <network_cli>')
+            self.results['msg'] = 'Connection type must be fully qualified name for network_cli connection type, got %s' % self.play_context.connection
             return self.results
 
         # Get playbook values

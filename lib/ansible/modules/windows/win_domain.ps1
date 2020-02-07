@@ -31,9 +31,11 @@ $domain_netbios_name = Get-AnsibleParam -obj $params -name "domain_netbios_name"
 $safe_mode_admin_password = Get-AnsibleParam -obj $params -name "safe_mode_password" -failifempty $true
 $database_path = Get-AnsibleParam -obj $params -name "database_path" -type "path"
 $sysvol_path = Get-AnsibleParam -obj $params -name "sysvol_path" -type "path"
+$log_path = Get-AnsibleParam -obj $params -name "log_path" -type "path"
 $create_dns_delegation = Get-AnsibleParam -obj $params -name "create_dns_delegation" -type "bool"
 $domain_mode = Get-AnsibleParam -obj $params -name "domain_mode" -type "str"
 $forest_mode = Get-AnsibleParam -obj $params -name "forest_mode" -type "str"
+$install_dns = Get-AnsibleParam -obj $params -name "install_dns" -type "bool" -default $true
 
 # FUTURE: Support down to Server 2012?
 if ([System.Environment]::OSVersion.Version -lt [Version]"6.3.9600.0") {
@@ -89,7 +91,7 @@ if (-not $forest) {
         SafeModeAdministratorPassword=$sm_cred;
         Confirm=$false;
         SkipPreChecks=$true;
-        InstallDns=$true;
+        InstallDns=$install_dns;
         NoRebootOnCompletion=$true;
         WhatIf=$check_mode;
     }
@@ -100,6 +102,10 @@ if (-not $forest) {
 
     if ($sysvol_path) {
         $install_params.SysvolPath = $sysvol_path
+    }
+
+    if ($log_path) {
+        $install_params.LogPath = $log_path
     }
 
     if ($domain_netbios_name) {

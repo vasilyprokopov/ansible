@@ -153,7 +153,7 @@ options:
                 type: int
             renew_interval:
                 description:
-                    - Time before lifetime expiraton to send NMMO HA re-registration (5 - 60).
+                    - Time before lifetime expiration to send NMMO HA re-registration (5 - 60).
                 type: int
             roaming_interface:
                 description:
@@ -168,7 +168,7 @@ options:
                     - enable
             tunnel_mode:
                 description:
-                    - NEMO tunnnel mode (GRE tunnel).
+                    - NEMO tunnel mode (GRE tunnel).
                 type: str
                 choices:
                     - gre
@@ -310,8 +310,8 @@ def filter_system_mobile_tunnel_data(json):
 
 def underscore_to_hyphen(data):
     if isinstance(data, list):
-        for elem in data:
-            elem = underscore_to_hyphen(elem)
+        for i, elem in enumerate(data):
+            data[i] = underscore_to_hyphen(elem)
     elif isinstance(data, dict):
         new_data = {}
         for k, v in data.items():

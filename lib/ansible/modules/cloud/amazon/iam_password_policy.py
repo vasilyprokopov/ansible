@@ -28,11 +28,13 @@ options:
       - Specifies the overall state of the password policy.
     required: true
     choices: ['present', 'absent']
+    type: str
   min_pw_length:
     description:
       - Minimum password length.
     default: 6
     aliases: [minimum_password_length]
+    type: int
   require_symbols:
     description:
       - Require symbols in password.
@@ -65,11 +67,13 @@ options:
         do not expire automatically.
     default: 0
     aliases: [password_max_age]
+    type: int
   pw_reuse_prevent:
     description:
       - Prevent re-use of passwords.
     default: 0
     aliases: [password_reuse_prevent, prevent_reuse]
+    type: int
   pw_expire:
     description:
       - Prevents users from change an expired password.
@@ -104,8 +108,7 @@ except ImportError:
     pass  # caught by AnsibleAWSModule
 
 from ansible.module_utils.aws.core import AnsibleAWSModule
-from ansible.module_utils.ec2 import boto3_conn, get_aws_connection_info, AWSRetry
-from ansible.module_utils.ec2 import camel_dict_to_snake_dict, boto3_tag_list_to_ansible_dict
+from ansible.module_utils.ec2 import camel_dict_to_snake_dict
 
 
 class IAMConnection(object):

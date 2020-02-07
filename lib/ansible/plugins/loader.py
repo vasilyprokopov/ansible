@@ -271,19 +271,15 @@ class PluginLoader:
         # PLUGIN_PATHS_CACHE, and MODULE_CACHE.  Since those three dicts key
         # on the class_name and neither regular modules nor powershell modules
         # would have class_names, they would not work as written.
-        reordered_paths = []
-        win_dirs = []
-
-        for path in ret:
-            if path.endswith('windows'):
-                win_dirs.append(path)
-            else:
-                reordered_paths.append(path)
-        reordered_paths.extend(win_dirs)
+        #
+        # The expected sort order is paths in the order in 'ret' with paths ending in '/windows' at the end,
+        # also in the original order they were found in 'ret'.
+        # The .sort() method is guaranteed to be stable, so original order is preserved.
+        ret.sort(key=lambda p: p.endswith('/windows'))
 
         # cache and return the result
-        self._paths = reordered_paths
-        return reordered_paths
+        self._paths = ret
+        return ret
 
     def _load_config_defs(self, name, module, path):
         ''' Reads plugin docs to find configuration setting definitions, to push to config manager for later use '''
@@ -317,11 +313,17 @@ class PluginLoader:
                 display.debug('Added %s to loader search path' % (directory))
 
     def _find_fq_plugin(self, fq_name, extension):
+        """Search builtin paths to find a plugin. No external paths are searched,
+        meaning plugins inside roles inside collections will be ignored.
+        """
+
         plugin_type = AnsibleCollectionRef.legacy_plugin_dir_to_plugin_type(self.subdir)
 
         acr = AnsibleCollectionRef.from_fqcr(fq_name, plugin_type)
 
         n_resource = to_native(acr.resource, errors='strict')
+        # we want this before the extension is added
+        full_name = '{0}.{1}'.format(acr.n_python_package_name, n_resource)
 
         if extension:
             n_resource += extension
@@ -336,10 +338,10 @@ class PluginLoader:
         if hasattr(pkg, '__loader__') and isinstance(pkg.__loader__, AnsibleFlatMapLoader):
             try:
                 file_path = pkg.__loader__.find_file(n_resource)
-                return to_text(file_path)
+                return full_name, to_text(file_path)
             except IOError:
                 # this loader already takes care of extensionless files, so if we didn't find it, just bail
-                return None
+                return None, None
 
         pkg_path = os.path.dirname(pkg.__file__)
 
@@ -347,27 +349,31 @@ class PluginLoader:
 
         # FIXME: and is file or file link or ...
         if os.path.exists(n_resource_path):
-            return to_text(n_resource_path)
+            return full_name, to_text(n_resource_path)
 
         # look for any matching extension in the package location (sans filter)
         ext_blacklist = ['.pyc', '.pyo']
         found_files = [f for f in glob.iglob(os.path.join(pkg_path, n_resource) + '.*') if os.path.isfile(f) and os.path.splitext(f)[1] not in ext_blacklist]
 
         if not found_files:
-            return None
+            return None, None
 
         if len(found_files) > 1:
             # TODO: warn?
             pass
 
-        return to_text(found_files[0])
+        return full_name, to_text(found_files[0])
 
     def find_plugin(self, name, mod_type='', ignore_deprecated=False, check_aliases=False, collection_list=None):
+        ''' Find a plugin named name '''
+        return self.find_plugin_with_name(name, mod_type, ignore_deprecated, check_aliases, collection_list)[1]
+
+    def find_plugin_with_name(self, name, mod_type='', ignore_deprecated=False, check_aliases=False, collection_list=None):
         ''' Find a plugin named name '''
 
         global _PLUGIN_FILTERS
         if name in _PLUGIN_FILTERS[self.package]:
-            return None
+            return None, None
 
         if mod_type:
             suffix = mod_type
@@ -391,25 +397,31 @@ class PluginLoader:
                 try:
                     # HACK: refactor this properly
                     if candidate_name.startswith('ansible.legacy'):
-                        # just pass the raw name to the old lookup function to check in all the usual locations
+                        # 'ansible.legacy' refers to the plugin finding behavior used before collections existed.
+                        # They need to search 'library' and the various '*_plugins' directories in order to find the file.
+                        full_name = name
                         p = self._find_plugin_legacy(name.replace('ansible.legacy.', '', 1), ignore_deprecated, check_aliases, suffix)
                     else:
-                        p = self._find_fq_plugin(candidate_name, suffix)
+                        # 'ansible.builtin' should be handled here. This means only internal, or builtin, paths are searched.
+                        full_name, p = self._find_fq_plugin(candidate_name, suffix)
                     if p:
-                        return p
+                        return full_name, p
                 except Exception as ex:
                     errors.append(to_native(ex))
 
             if errors:
                 display.debug(msg='plugin lookup for {0} failed; errors: {1}'.format(name, '; '.join(errors)))
 
-            return None
+            return None, None
 
         # if we got here, there's no collection list and it's not an FQ name, so do legacy lookup
 
-        return self._find_plugin_legacy(name, ignore_deprecated, check_aliases, suffix)
+        return name, self._find_plugin_legacy(name, ignore_deprecated, check_aliases, suffix)
 
     def _find_plugin_legacy(self, name, ignore_deprecated=False, check_aliases=False, suffix=None):
+        """Search library and various *_plugins paths in order to find the file.
+        This was behavior prior to the existence of collections.
+        """
 
         if check_aliases:
             name = self.aliases.get(name, name)
@@ -501,7 +513,10 @@ class PluginLoader:
     def _load_module_source(self, name, path):
 
         # avoid collisions across plugins
-        full_name = '.'.join([self.package, name])
+        if name.startswith('ansible_collections.'):
+            full_name = name
+        else:
+            full_name = '.'.join([self.package, name])
 
         if full_name in sys.modules:
             # Avoids double loading, See https://github.com/ansible/ansible/issues/13110
@@ -534,7 +549,7 @@ class PluginLoader:
         collection_list = kwargs.pop('collection_list', None)
         if name in self.aliases:
             name = self.aliases[name]
-        path = self.find_plugin(name, collection_list=collection_list)
+        name, path = self.find_plugin_with_name(name, collection_list=collection_list)
         if path is None:
             return None
 

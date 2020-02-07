@@ -33,6 +33,7 @@ options:
     - If you pass including and excluding values to the filter, for example, I(filter=!settings,ver),
       the excluding values will be ignored.
     type: list
+    elements: str
   db:
     description:
     - Name of database to connect.
@@ -181,16 +182,16 @@ databases:
               returned: always
               type: dict
               contains:
-              major:
-                description: Extension major version.
-                returned: always
-                type: int
-                sample: 1
-              minor:
-                description: Extension minor version.
-                returned: always
-                type: int
-                sample: 0
+                major:
+                  description: Extension major version.
+                  returned: always
+                  type: int
+                  sample: 1
+                minor:
+                  description: Extension minor version.
+                  returned: always
+                  type: int
+                  sample: 0
             nspname:
               description: Namespace where the extension is.
               returned: always
@@ -905,7 +906,7 @@ def main():
     argument_spec = postgres_common_argument_spec()
     argument_spec.update(
         db=dict(type='str', aliases=['login_db']),
-        filter=dict(type='list'),
+        filter=dict(type='list', elements='str'),
         session_role=dict(type='str'),
     )
     module = AnsibleModule(

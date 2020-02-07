@@ -106,7 +106,7 @@ Parameters
             <th width="100%">Comments</th>
         </tr>
         {% for key, value in options|dictsort recursive %}
-            <tr>
+            <tr id="parameter-{% for part in value.full_key %}@{ part }@{% if not loop.last %}/{% endif %}{% endfor %}">
                 {# indentation based on nesting level #}
                 {% for i in range(1, loop.depth) %}
                     <td class="elbow-placeholder"></td>
@@ -114,6 +114,7 @@ Parameters
                 {# parameter name with required and/or introduced label #}
                 <td colspan="@{ from_kludge_ns('maxdepth') - loop.depth0 }@">
                     <b>@{ key }@</b>
+                    <a class="ansibleOptionLink" href="#parameter-{% for part in value.full_key %}@{ part }@{% if not loop.last %}/{% endif %}{% endfor %}" title="Permalink to this option">¶</a>
                     <div style="font-size: small">
                         <span style="color: purple">@{ value.type | documented_type }@</span>
                         {% if value.get('elements') %} / <span style="color: purple">elements=@{ value.elements | documented_type }@</span>{% endif %}
@@ -282,13 +283,17 @@ Facts returned by this module are added/updated in the ``hostvars`` host facts a
             <th width="100%">Description</th>
         </tr>
         {% for key, value in returnfacts|dictsort recursive %}
-            <tr>
+            <tr id="return-{% for part in value.full_key %}@{ part }@{% if not loop.last %}/{% endif %}{% endfor %}">
                 {% for i in range(1, loop.depth) %}
                     <td class="elbow-placeholder"></td>
                 {% endfor %}
                 <td colspan="@{ from_kludge_ns('maxdepth') - loop.depth0 }@" colspan="@{ from_kludge_ns('maxdepth') - loop.depth0 }@">
                     <b>@{ key }@</b>
-                    <div style="font-size: small; color: purple">@{ value.type | documented_type }@</div>
+                    <a class="ansibleOptionLink" href="#return-{% for part in value.full_key %}@{ part }@{% if not loop.last %}/{% endif %}{% endfor %}" title="Permalink to this fact">¶</a>
+                    <div style="font-size: small">
+                      <span style="color: purple">@{ value.type | documented_type }@</span>
+                      {% if value.elements %} / <span style="color: purple">elements=@{ value.elements | documented_type }@</span>{% endif %}
+                    </div>
                     {% if value.version_added %}<div style="font-style: italic; font-size: small; color: darkgreen">added in @{value.version_added}@</div>{% endif %}
                 </td>
                 <td>@{ value.returned | html_ify }@</td>
@@ -354,13 +359,17 @@ Common return values are documented :ref:`here <common_return_values>`, the foll
             <th width="100%">Description</th>
         </tr>
         {% for key, value in returndocs|dictsort recursive %}
-            <tr>
+            <tr id="return-{% for part in value.full_key %}@{ part }@{% if not loop.last %}/{% endif %}{% endfor %}">
                 {% for i in range(1, loop.depth) %}
                     <td class="elbow-placeholder">&nbsp;</td>
                 {% endfor %}
                 <td colspan="@{ from_kludge_ns('maxdepth') - loop.depth0 }@">
                     <b>@{ key }@</b>
-                    <div style="font-size: small; color: purple">@{ value.type | documented_type }@</div>
+                    <a class="ansibleOptionLink" href="#return-{% for part in value.full_key %}@{ part }@{% if not loop.last %}/{% endif %}{% endfor %}" title="Permalink to this return value">¶</a>
+                    <div style="font-size: small">
+                      <span style="color: purple">@{ value.type | documented_type }@</span>
+                      {% if value.elements %} / <span style="color: purple">elements=@{ value.elements | documented_type }@</span>{% endif %}
+                    </div>
                     {% if value.version_added %}<div style="font-style: italic; font-size: small; color: darkgreen">added in @{value.version_added}@</div>{% endif %}
                 </td>
                 <td>@{ value.returned | html_ify }@</td>
@@ -452,4 +461,8 @@ Authors
     If you notice any issues in this documentation, you can `edit this document <https://github.com/ansible/ansible/edit/devel/lib/ansible/modules/@{ source }@?description=%23%23%23%23%23%20SUMMARY%0A%3C!---%20Your%20description%20here%20--%3E%0A%0A%0A%23%23%23%23%23%20ISSUE%20TYPE%0A-%20Docs%20Pull%20Request%0A%0A%2Blabel:%20docsite_pr>`_ to improve it.
 {% else %}
     If you notice any issues in this documentation, you can `edit this document <https://github.com/ansible/ansible/edit/devel/lib/ansible/plugins/@{ plugin_type }@/@{ source }@?description=%23%23%23%23%23%20SUMMARY%0A%3C!---%20Your%20description%20here%20--%3E%0A%0A%0A%23%23%23%23%23%20ISSUE%20TYPE%0A-%20Docs%20Pull%20Request%0A%0A%2Blabel:%20docsite_pr>`_ to improve it.
+
+
+.. hint::
+    Configuration entries for each entry type have a low to high priority order. For example, a variable that is lower in the list will override a variable that is higher up.
 {% endif %}

@@ -120,8 +120,8 @@ options:
                 suboptions:
                     custom_service:
                         description:
-                            - Only sessions using these custom services are synchronized. Use source and destination port ranges to define these custome
-                               services.
+                            - Only sessions using these custom services are synchronized. Use source and destination port ranges to define these custom
+                              services.
                         type: list
                         suboptions:
                             dst_port_range:
@@ -329,8 +329,8 @@ def filter_system_cluster_sync_data(json):
 
 def underscore_to_hyphen(data):
     if isinstance(data, list):
-        for elem in data:
-            elem = underscore_to_hyphen(elem)
+        for i, elem in enumerate(data):
+            data[i] = underscore_to_hyphen(elem)
     elif isinstance(data, dict):
         new_data = {}
         for k, v in data.items():

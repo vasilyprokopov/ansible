@@ -36,12 +36,6 @@ from ansible.plugins.strategy import StrategyBase
 
 class TestStrategyBase(unittest.TestCase):
 
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     def test_strategy_base_init(self):
         queue_items = []
 
@@ -201,6 +195,7 @@ class TestStrategyBase(unittest.TestCase):
 
         mock_task = MagicMock()
         mock_task._uuid = 'abcd'
+        mock_task.throttle = 0
 
         try:
             strategy_base = StrategyBase(tqm=tqm)

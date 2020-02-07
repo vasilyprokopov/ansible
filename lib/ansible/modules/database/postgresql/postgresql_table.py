@@ -63,6 +63,7 @@ options:
     description:
     - Columns that are needed.
     type: list
+    elements: str
   rename:
     description:
     - New table name. Mutually exclusive with I(tablespace), I(owner),
@@ -79,6 +80,7 @@ options:
     - Storage parameters like fillfactor, autovacuum_vacuum_treshold, etc.
       Mutually exclusive with I(rename) and I(truncate).
     type: list
+    elements: str
   db:
     description:
     - Name of database to connect and where the table will be created.
@@ -106,7 +108,8 @@ notes:
 - Unlogged tables are available from PostgreSQL server version 9.1.
 seealso:
 - module: postgresql_sequence
-- module: postgresql_index
+- module: postgresql_idx
+- module: postgresql_info
 - module: postgresql_tablespace
 - module: postgresql_owner
 - module: postgresql_privs
@@ -285,9 +288,10 @@ class Table(object):
                  "FROM pg_tables AS t "
                  "INNER JOIN pg_class AS c ON  c.relname = t.tablename "
                  "INNER JOIN pg_namespace AS n ON c.relnamespace = n.oid "
-                 "WHERE t.tablename = '%s' "
-                 "AND n.nspname = '%s'" % (tblname, schema))
-        res = exec_sql(self, query, add_to_executed=False)
+                 "WHERE t.tablename = %(tblname)s "
+                 "AND n.nspname = %(schema)s")
+        res = exec_sql(self, query, query_params={'tblname': tblname, 'schema': schema},
+                       add_to_executed=False)
         if res:
             self.exists = True
             self.info = dict(
@@ -469,8 +473,8 @@ def main():
         including=dict(type='str'),
         rename=dict(type='str'),
         truncate=dict(type='bool', default=False),
-        columns=dict(type='list'),
-        storage_params=dict(type='list'),
+        columns=dict(type='list', elements='str'),
+        storage_params=dict(type='list', elements='str'),
         session_role=dict(type='str'),
         cascade=dict(type='bool', default=False),
     )
